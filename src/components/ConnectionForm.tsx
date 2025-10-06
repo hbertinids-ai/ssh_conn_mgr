@@ -19,7 +19,11 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
     password: '',
     privateKey: '',
     tunnelId: '',
+    group: '',
   });
+
+  // Get unique groups from existing connections
+  const existingGroups = Array.from(new Set(connections.map(c => c.group).filter(Boolean))) as string[];
 
   useEffect(() => {
     if (connection) {
@@ -31,6 +35,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
         password: connection.password || '',
         privateKey: connection.privateKey || '',
         tunnelId: connection.tunnelId || '',
+        group: connection.group || '',
       });
     }
   }, [connection]);
@@ -43,6 +48,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
       password: formData.password || undefined,
       privateKey: formData.privateKey || undefined,
       tunnelId: formData.tunnelId || undefined,
+      group: formData.group || undefined,
     };
 
     if (connectionId) {
@@ -144,6 +150,25 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               onChange={(e) => setFormData({ ...formData, privateKey: e.target.value })}
               placeholder="-----BEGIN RSA PRIVATE KEY-----"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Group (optional)
+            </label>
+            <input
+              type="text"
+              list="connection-groups"
+              className="input-field"
+              value={formData.group}
+              onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+              placeholder="e.g., Production, Development"
+            />
+            <datalist id="connection-groups">
+              {existingGroups.map((group) => (
+                <option key={group} value={group} />
+              ))}
+            </datalist>
           </div>
 
           <div>

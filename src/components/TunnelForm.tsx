@@ -18,7 +18,11 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
     username: '',
     password: '',
     privateKey: '',
+    group: '',
   });
+
+  // Get unique groups from existing tunnels
+  const existingGroups = Array.from(new Set(tunnels.map(t => t.group).filter(Boolean))) as string[];
 
   useEffect(() => {
     if (tunnel) {
@@ -29,6 +33,7 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
         username: tunnel.username,
         password: tunnel.password || '',
         privateKey: tunnel.privateKey || '',
+        group: tunnel.group || '',
       });
     }
   }, [tunnel]);
@@ -40,6 +45,7 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
       ...formData,
       password: formData.password || undefined,
       privateKey: formData.privateKey || undefined,
+      group: formData.group || undefined,
     };
 
     if (tunnelId) {
@@ -115,6 +121,25 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               placeholder="user"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Group (optional)
+            </label>
+            <input
+              type="text"
+              list="tunnel-groups"
+              className="input-field"
+              value={formData.group}
+              onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+              placeholder="e.g., Production, Development"
+            />
+            <datalist id="tunnel-groups">
+              {existingGroups.map((group) => (
+                <option key={group} value={group} />
+              ))}
+            </datalist>
           </div>
 
           <div>

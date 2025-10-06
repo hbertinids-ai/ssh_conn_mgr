@@ -1,12 +1,40 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useConnectionStore } from '../store/connectionStore';
-import { Plus, Network, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Network, Trash2, Edit2, ChevronDown, ChevronRight } from 'lucide-react';
 import { TunnelForm } from './TunnelForm';
 
 export function TunnelManager() {
   const { tunnels, deleteTunnel } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  // Group tunnels by group field
+  const groupedTunnels = useMemo(() => {
+    const groups: Record<string, typeof tunnels> = {};
+    
+    tunnels.forEach((tunnel) => {
+      const groupName = tunnel.group || 'Ungrouped';
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push(tunnel);
+    });
+    
+    return groups;
+  }, [tunnels]);
+
+  const toggleGroup = (groupName: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupName)) {
+        next.delete(groupName);
+      } else {
+        next.add(groupName);
+      }
+      return next;
+    });
+  };
 
   const handleEdit = (id: string) => {
     setEditingId(id);
@@ -34,7 +62,7 @@ export function TunnelManager() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {tunnels.length === 0 ? (
           <div className="text-center py-12">
             <Network className="w-12 h-12 text-slate-600 mx-auto mb-3" />
@@ -42,38 +70,65 @@ export function TunnelManager() {
             <p className="text-slate-600 text-xs mt-1">Add a tunnel for proxy connections</p>
           </div>
         ) : (
-          tunnels.map((tunnel) => (
-            <div
-              key={tunnel.id}
-              className="card p-4 hover:border-slate-600 transition-all group"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-2 flex-1">
-                  <Network className="w-4 h-4 text-primary-400" />
-                  <h3 className="font-medium text-white truncate">{tunnel.name}</h3>
+          Object.entries(groupedTunnels).map(([groupName, groupTunnels]) => (
+            <div key={groupName} className="space-y-2">
+              {/* Group Header */}
+              <button
+                onClick={() => toggleGroup(groupName)}
+                className="w-full flex items-center space-x-2 px-2 py-1 hover:bg-slate-700/50 rounded transition-colors"
+              >
+                {collapsedGroups.has(groupName) ? (
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                )}
+                <span className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                  {groupName}
+                </span>
+                <span className="text-xs text-slate-500">
+                  ({groupTunnels.length})
+                </span>
+              </button>
+
+              {/* Group Tunnels */}
+              {!collapsedGroups.has(groupName) && (
+                <div className="space-y-2 ml-2">
+                  {groupTunnels.map((tunnel) => (
+                    <div
+                      key={tunnel.id}
+                      className="card p-4 hover:border-slate-600 transition-all group"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-2 flex-1">
+                          <Network className="w-4 h-4 text-primary-400" />
+                          <h3 className="font-medium text-white truncate">{tunnel.name}</h3>
+                        </div>
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleEdit(tunnel.id)}
+                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4 text-blue-400" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(tunnel.id)}
+                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="text-sm text-slate-400">
+                        <p className="font-mono">
+                          {tunnel.username}@{tunnel.host}:{tunnel.port}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEdit(tunnel.id)}
-                    className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                    title="Edit"
-                  >
-                    <Edit2 className="w-4 h-4 text-blue-400" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(tunnel.id)}
-                    className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
-                </div>
-              </div>
-              <div className="text-sm text-slate-400">
-                <p className="font-mono">
-                  {tunnel.username}@{tunnel.host}:{tunnel.port}
-                </p>
-              </div>
+              )}
             </div>
           ))
         )}

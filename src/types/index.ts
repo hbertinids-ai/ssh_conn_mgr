@@ -6,6 +6,7 @@ export interface SSHTunnel {
   username: string;
   password?: string;
   privateKey?: string;
+  group?: string;
   createdAt: string;
 }
 
@@ -18,6 +19,7 @@ export interface SSHConnection {
   password?: string;
   privateKey?: string;
   tunnelId?: string;
+  group?: string;
   color?: string;
   createdAt: string;
 }
