@@ -8,7 +8,7 @@ interface ConnectionFormProps {
 }
 
 export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
-  const { connections, tunnels, addConnection, updateConnection } = useConnectionStore();
+  const { connections, tunnels, accounts, addConnection, updateConnection } = useConnectionStore();
   const connection = connectionId ? connections.find((c) => c.id === connectionId) : null;
 
   const [formData, setFormData] = useState({
@@ -19,6 +19,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
     password: '',
     privateKey: '',
     tunnelId: '',
+    accountId: '',
     group: '',
   });
 
@@ -35,6 +36,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
         password: connection.password || '',
         privateKey: connection.privateKey || '',
         tunnelId: connection.tunnelId || '',
+        accountId: connection.accountId || '',
         group: connection.group || '',
       });
     }
@@ -48,6 +50,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
       password: formData.password || undefined,
       privateKey: formData.privateKey || undefined,
       tunnelId: formData.tunnelId || undefined,
+      accountId: formData.accountId || undefined,
       group: formData.group || undefined,
     };
 
@@ -70,6 +73,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
           <button
             onClick={onClose}
             className="p-1 hover:bg-slate-700 rounded transition-colors"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -110,8 +114,37 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
                 className="input-field"
                 value={formData.port}
                 onChange={(e) => setFormData({ ...formData, port: parseInt(e.target.value) })}
+                placeholder="22"
+                title="SSH port number"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Account (optional)</label>
+            <select
+              className="input-field"
+              value={formData.accountId}
+              onChange={(e) => {
+                const accountId = e.target.value;
+                const selectedAccount = accounts.find(a => a.id === accountId);
+                setFormData({ 
+                  ...formData, 
+                  accountId,
+                  username: selectedAccount ? selectedAccount.username : formData.username,
+                  password: selectedAccount ? (selectedAccount.password || '') : formData.password,
+                  privateKey: selectedAccount ? (selectedAccount.privateKey || '') : formData.privateKey,
+                });
+              }}
+              title="Select an account to use its credentials"
+            >
+              <option value="">Manual entry</option>
+              {accounts.map(account => (
+                <option key={account.id} value={account.id}>
+                  {account.name} ({account.username})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -123,6 +156,8 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               placeholder="root"
+              disabled={!!formData.accountId}
+              title={formData.accountId ? "Username is populated from selected account" : "Enter username"}
             />
           </div>
 
@@ -136,6 +171,8 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               placeholder="••••••••"
+              disabled={!!formData.accountId}
+              title={formData.accountId ? "Password is populated from selected account" : "Enter password"}
             />
           </div>
 
@@ -149,6 +186,8 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               value={formData.privateKey}
               onChange={(e) => setFormData({ ...formData, privateKey: e.target.value })}
               placeholder="-----BEGIN RSA PRIVATE KEY-----"
+              disabled={!!formData.accountId}
+              title={formData.accountId ? "Private key is populated from selected account" : "Enter private key"}
             />
           </div>
 
@@ -179,6 +218,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               className="input-field"
               value={formData.tunnelId}
               onChange={(e) => setFormData({ ...formData, tunnelId: e.target.value })}
+              title="Select a tunnel to use as jump host"
             >
               <option value="">No tunnel</option>
               {tunnels.map((tunnel) => (

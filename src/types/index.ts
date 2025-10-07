@@ -10,6 +10,17 @@ export interface SSHTunnel {
   createdAt: string;
 }
 
+export interface SSHAccount {
+  id: string;
+  name: string;
+  username: string;
+  password?: string;
+  privateKey?: string;
+  description?: string;
+  group?: string;
+  createdAt: string;
+}
+
 export interface SSHConnection {
   id: string;
   name: string;
@@ -18,6 +29,7 @@ export interface SSHConnection {
   username: string;
   password?: string;
   privateKey?: string;
+  accountId?: string; // Reference to SSHAccount
   tunnelId?: string;
   group?: string;
   color?: string;

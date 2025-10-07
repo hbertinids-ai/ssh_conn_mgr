@@ -1,39 +1,46 @@
 import { useState } from 'react';
 import { Upload, Download, FileText, File, AlertCircle, CheckCircle } from 'lucide-react';
 import { importExportService } from '../services/importExportService';
-import { SSHConnection, SSHTunnel } from '../types';
+import { SSHConnection, SSHTunnel, SSHAccount } from '../types';
 
 interface ImportExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'connections' | 'tunnels';
-  data: SSHConnection[] | SSHTunnel[];
-  onImport: (items: SSHConnection[] | SSHTunnel[]) => void;
+  type: 'connections' | 'tunnels' | 'accounts';
+  data: SSHConnection[] | SSHTunnel[] | SSHAccount[];
+  onImport: (items: SSHConnection[] | SSHTunnel[] | SSHAccount[]) => void;
 }
 
 export function ImportExportModal({ isOpen, onClose, type, data, onImport }: ImportExportModalProps) {
   const [activeTab, setActiveTab] = useState<'export' | 'import'>('export');
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [importMessage, setImportMessage] = useState('');
+  const [includePasswords, setIncludePasswords] = useState(false);
+  const [keepPasswords, setKeepPasswords] = useState(false);
 
   if (!isOpen) return null;
 
   const isConnections = type === 'connections';
-  const title = isConnections ? 'Connections' : 'Tunnels';
+  const isAccounts = type === 'accounts';
+  const title = isConnections ? 'Connections' : isAccounts ? 'Accounts' : 'Tunnels';
 
   const handleExportCSV = () => {
     if (isConnections) {
-      importExportService.exportConnectionsToCSV(data as SSHConnection[]);
+      importExportService.exportConnectionsToCSV(data as SSHConnection[], includePasswords);
+    } else if (isAccounts) {
+      importExportService.exportAccountsToCSV(data as SSHAccount[], includePasswords);
     } else {
-      importExportService.exportTunnelsToCSV(data as SSHTunnel[]);
+      importExportService.exportTunnelsToCSV(data as SSHTunnel[], includePasswords);
     }
   };
 
   const handleExportJSON = () => {
     if (isConnections) {
-      importExportService.exportConnectionsToJSON(data as SSHConnection[]);
+      importExportService.exportConnectionsToJSON(data as SSHConnection[], includePasswords);
+    } else if (isAccounts) {
+      importExportService.exportAccountsToJSON(data as SSHAccount[], includePasswords);
     } else {
-      importExportService.exportTunnelsToJSON(data as SSHTunnel[]);
+      importExportService.exportTunnelsToJSON(data as SSHTunnel[], includePasswords);
     }
   };
 
@@ -42,19 +49,25 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
     setImportMessage('Processing file...');
 
     try {
-      let importedItems: SSHConnection[] | SSHTunnel[];
+      let importedItems: SSHConnection[] | SSHTunnel[] | SSHAccount[];
 
       if (isConnections) {
         if (format === 'csv') {
-          importedItems = await importExportService.importConnectionsFromCSV(file);
+          importedItems = await importExportService.importConnectionsFromCSV(file, keepPasswords);
         } else {
-          importedItems = await importExportService.importConnectionsFromJSON(file);
+          importedItems = await importExportService.importConnectionsFromJSON(file, keepPasswords);
+        }
+      } else if (isAccounts) {
+        if (format === 'csv') {
+          importedItems = await importExportService.importAccountsFromCSV(file, keepPasswords);
+        } else {
+          importedItems = await importExportService.importAccountsFromJSON(file, keepPasswords);
         }
       } else {
         if (format === 'csv') {
-          importedItems = await importExportService.importTunnelsFromCSV(file);
+          importedItems = await importExportService.importTunnelsFromCSV(file, keepPasswords);
         } else {
-          importedItems = await importExportService.importTunnelsFromJSON(file);
+          importedItems = await importExportService.importTunnelsFromJSON(file, keepPasswords);
         }
       }
 
@@ -136,9 +149,27 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
               <h3 className="text-lg font-semibold text-white mb-4">
                 Export {title} ({data.length} items)
               </h3>
-              <p className="text-slate-400 mb-6">
+              <p className="text-slate-400 mb-4">
                 Download your {type} in CSV or JSON format for backup or sharing.
               </p>
+
+              {/* Password option */}
+              <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includePasswords}
+                    onChange={(e) => setIncludePasswords(e.target.checked)}
+                    className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <div>
+                    <div className="text-white font-medium">Include passwords and private keys</div>
+                    <div className="text-slate-400 text-sm">
+                      Export credentials (not recommended for shared files)
+                    </div>
+                  </div>
+                </label>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -164,27 +195,47 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
                 </button>
               </div>
 
-              <div className="mt-6 p-4 bg-amber-900/20 border border-amber-700 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5" />
-                  <div>
-                    <div className="text-amber-400 font-medium text-sm">Security Note</div>
-                    <div className="text-amber-300 text-sm">
-                      Passwords and private keys are not included in exports for security reasons.
-                      You'll need to re-enter them after importing.
+              {!includePasswords && (
+                <div className="mt-6 p-4 bg-amber-900/20 border border-amber-700 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5" />
+                    <div>
+                      <div className="text-amber-400 font-medium text-sm">Security Note</div>
+                      <div className="text-amber-300 text-sm">
+                        Passwords and private keys will not be included in exports.
+                        You'll need to re-enter them after importing.
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
           {activeTab === 'import' && (
             <div>
               <h3 className="text-lg font-semibold text-white mb-4">Import {title}</h3>
-              <p className="text-slate-400 mb-6">
+              <p className="text-slate-400 mb-4">
                 Upload a CSV or JSON file to import {type}. Existing items will not be overwritten.
               </p>
+
+              {/* Password option */}
+              <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={keepPasswords}
+                    onChange={(e) => setKeepPasswords(e.target.checked)}
+                    className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <div>
+                    <div className="text-white font-medium">Keep passwords and private keys from file</div>
+                    <div className="text-slate-400 text-sm">
+                      Import credentials if they exist in the file (only if previously exported with passwords)
+                    </div>
+                  </div>
+                </label>
+              </div>
 
               {importStatus === 'idle' && (
                 <div className="grid grid-cols-2 gap-4">

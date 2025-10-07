@@ -7,8 +7,10 @@ A modern, beautiful SSH connection manager built with Electron, React, and TypeS
 - 🖥️ **Tabbed SSH Sessions** - Open and manage multiple SSH connections in tabs
 - 🔐 **SSH Tunnel Support** - Connect through SSH tunnels (jump hosts/bastion servers)
 - 🔑 **Multiple Authentication** - Support for password and private key authentication
-- 💾 **Connection Management** - Full CRUD operations for connections and tunnels
-- 📁 **Connection Grouping** - Organize connections and tunnels into collapsible groups
+- � **Account Management** - Create reusable accounts with credentials that can be shared across connections
+- �💾 **Connection Management** - Full CRUD operations for connections, tunnels, and accounts
+- 📁 **Organized Grouping** - Organize connections, tunnels, and accounts into collapsible groups
+- 📤 **Import/Export** - Import and export connections, tunnels, and accounts in CSV/JSON formats
 - 💾 **Save Session Output** - Export terminal session logs to text files with one click
 - 🎨 **Beautiful UI** - Clean, modern interface built with Tailwind CSS
 - ⚡ **Fast & Responsive** - Built on Electron with React for optimal performance
@@ -83,6 +85,21 @@ Want to quickly add 22 pre-configured CAT1 connections? See **[CAT1_DATA_READY.m
    - Username and Password
 4. Click "Create Tunnel"
 
+### Managing Accounts
+
+1. Click the "Accounts" tab in the header
+2. Click "New Account" to create a reusable account
+3. Fill in the account details:
+   - Account Name
+   - Username
+   - Choose authentication method (Password or Private Key)
+   - Optional: Group (e.g., "Admin Accounts", "User Accounts")
+4. Click "Create Account"
+
+When creating connections, you can:
+- Select an existing account from the dropdown to auto-populate credentials
+- Or choose "Manual entry" to enter credentials directly
+
 ### Connecting to a Server
 
 1. Find your connection in the sidebar
@@ -98,6 +115,27 @@ Want to quickly add 22 pre-configured CAT1 connections? See **[CAT1_DATA_READY.m
   - 🟢 Green = Connected
   - 🔴 Red = Error
 
+### Import/Export Data
+
+You can import and export your data to backup or share configurations:
+
+1. Click "Help" → "Import/Export" in the main menu
+2. Choose data type: Connections, Tunnels, or Accounts
+3. **Export options:**
+   - **CSV**: Spreadsheet-friendly format for editing
+   - **JSON**: Complete data backup with all fields
+   - **Include passwords**: Toggle to include/exclude passwords and private keys (default: OFF for security)
+4. **Import options:**
+   - Select a CSV or JSON file to import data
+   - **Keep passwords**: Toggle to preserve passwords from file (default: OFF, requires passwords in source file)
+
+**Security Notes:**
+- By default, passwords and private keys are NOT included in exports for security
+- You'll need to re-enter credentials after importing unless you enabled "Include passwords" during export
+- Only enable password export for secure, private backups
+
+**Tip**: Use CSV export to bulk-edit connections in Excel/Google Sheets, then import back!
+
 ## Project Structure
 
 ```
@@ -112,6 +150,9 @@ ssh_conn_mgr/
 │   │   ├── ConnectionForm.tsx
 │   │   ├── TunnelManager.tsx
 │   │   ├── TunnelForm.tsx
+│   │   ├── AccountManager.tsx
+│   │   ├── AccountForm.tsx
+│   │   ├── ImportExportModal.tsx
 │   │   ├── Terminal.tsx
 │   │   └── Tabs.tsx
 │   ├── store/        # State management

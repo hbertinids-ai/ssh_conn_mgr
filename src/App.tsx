@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { ConnectionManager } from './components/ConnectionManager';
 import { Terminal } from './components/Terminal';
 import { TunnelManager } from './components/TunnelManager';
+import { AccountManager } from './components/AccountManager';
 import { Tabs } from './components/Tabs';
 import { HelpModal } from './components/HelpModal';
 import { useConnectionStore } from './store/connectionStore';
-import { Server, Network, PanelLeftClose, PanelLeft, HelpCircle } from 'lucide-react';
+import { Server, Network, PanelLeftClose, PanelLeft, HelpCircle, User } from 'lucide-react';
 
 function App() {
-  const [view, setView] = useState<'connections' | 'tunnels'>('connections');
+  const [view, setView] = useState<'connections' | 'tunnels' | 'accounts'>('connections');
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { activeSessionId } = useConnectionStore();
@@ -59,6 +60,17 @@ function App() {
             <span>Tunnels</span>
           </button>
           <button
+            onClick={() => setView('accounts')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+              view === 'accounts'
+                ? 'bg-primary-600 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Accounts</span>
+          </button>
+          <button
             onClick={() => setHelpModalOpen(true)}
             className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600"
             title="Help & Documentation"
@@ -84,6 +96,12 @@ function App() {
           </aside>
         )}
 
+        {sidebarVisible && view === 'accounts' && (
+          <aside className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
+            <AccountManager />
+          </aside>
+        )}
+
         {/* Terminal Area */}
         <main className="flex-1 flex flex-col bg-slate-900">
           {activeSessionId ? (
@@ -103,6 +121,8 @@ function App() {
                     ? 'Select a connection from the sidebar to start a session'
                     : !sidebarVisible 
                     ? 'Click the icon in the top-left to show connections'
+                    : view === 'accounts'
+                    ? 'Switch to Connections to start a session'
                     : 'Switch to Connections to start a session'}
                 </p>
               </div>

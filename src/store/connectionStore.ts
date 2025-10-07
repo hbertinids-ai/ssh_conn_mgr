@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SSHConnection, SSHSession, SSHTunnel } from '../types';
+import { SSHConnection, SSHSession, SSHTunnel, SSHAccount } from '../types';
 
 interface ConnectionState {
   connections: SSHConnection[];
   tunnels: SSHTunnel[];
+  accounts: SSHAccount[];
   sessions: SSHSession[];
   activeSessionId: string | null;
   
@@ -18,6 +19,11 @@ interface ConnectionState {
   updateTunnel: (id: string, tunnel: Partial<SSHTunnel>) => void;
   deleteTunnel: (id: string) => void;
   
+  // Account CRUD
+  addAccount: (account: Omit<SSHAccount, 'id' | 'createdAt'>) => void;
+  updateAccount: (id: string, account: Partial<SSHAccount>) => void;
+  deleteAccount: (id: string) => void;
+  
   // Session management
   createSession: (connectionId: string) => void;
   setSessionStatus: (id: string, status: SSHSession['status'], error?: string) => void;
@@ -30,6 +36,7 @@ export const useConnectionStore = create<ConnectionState>()(
     (set, get) => ({
       connections: [],
       tunnels: [],
+      accounts: [],
       sessions: [],
       activeSessionId: null,
       
@@ -82,6 +89,35 @@ export const useConnectionStore = create<ConnectionState>()(
       deleteTunnel: (id) => {
         set((state) => ({
           tunnels: state.tunnels.filter((tunnel) => tunnel.id !== id),
+        }));
+      },
+      
+      addAccount: (account) => {
+        const newAccount: SSHAccount = {
+          ...account,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          accounts: [...state.accounts, newAccount],
+        }));
+      },
+      
+      updateAccount: (id, updates) => {
+        set((state) => ({
+          accounts: state.accounts.map((account) =>
+            account.id === id ? { ...account, ...updates } : account
+          ),
+        }));
+      },
+      
+      deleteAccount: (id) => {
+        // Remove account references from connections first
+        set((state) => ({
+          accounts: state.accounts.filter((account) => account.id !== id),
+          connections: state.connections.map((conn) =>
+            conn.accountId === id ? { ...conn, accountId: undefined } : conn
+          ),
         }));
       },
       

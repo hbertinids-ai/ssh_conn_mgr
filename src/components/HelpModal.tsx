@@ -15,13 +15,15 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
     '🖥️ Tabbed SSH Sessions - Open and manage multiple SSH connections in tabs',
     '🔐 SSH Tunnel Support - Connect through SSH tunnels (jump hosts/bastion servers)',
     '🔑 Multiple Authentication - Support for password and private key authentication',
-    '💾 Connection Management - Full CRUD operations for connections and tunnels',
-    '📁 Connection Grouping - Organize connections and tunnels into collapsible groups',
+    '� Account Management - Create reusable accounts with credentials for multiple connections',
+    '💾 Complete Data Management - Full CRUD operations for connections, tunnels, and accounts',
+    '📁 Smart Grouping - Organize connections, tunnels, and accounts into collapsible groups',
     '💾 Save Session Output - Export terminal session logs to text files with one click',
+    '📥 Import/Export - CSV and JSON import/export for all data types',
+    '🔒 Security Options - Toggle password/key inclusion in exports (default: OFF for security)',
     '🎨 Beautiful UI - Clean, modern interface built with Tailwind CSS',
     '⚡ Fast & Responsive - Built on Electron with React for optimal performance',
-    '🎯 Color-Coded Connections - Visual distinction between different connections',
-    '📥 Import/Export - CSV and JSON import/export for connections and tunnels'
+    '🎯 Color-Coded Connections - Visual distinction between different connections'
   ];
 
   const installationSteps = [
@@ -216,10 +218,12 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
               <div className="mt-6 p-4 bg-amber-900/20 border border-amber-700 rounded-lg">
                 <h4 className="text-amber-400 font-medium mb-2">Pro Tips</h4>
                 <ul className="space-y-1 text-sm text-slate-300">
-                  <li>• Use groups to organize many connections</li>
-                  <li>• Download session output for logging</li>
+                  <li>• Use accounts to reuse credentials across multiple connections</li>
+                  <li>• Use groups to organize connections, tunnels, and accounts</li>
+                  <li>• Download session output for logging and auditing</li>
                   <li>• Use tunnels for secure connections through jump hosts</li>
-                  <li>• Import/export connections for backup and sharing</li>
+                  <li>• Export data without passwords by default for safe sharing</li>
+                  <li>• Enable password export only for secure, private backups</li>
                 </ul>
               </div>
             </div>

@@ -1,14 +1,18 @@
-import { SSHConnection, SSHTunnel } from '../types';
+import { SSHConnection, SSHTunnel, SSHAccount } from '../types';
 
 export interface ImportExportService {
-  exportConnectionsToCSV: (connections: SSHConnection[]) => void;
-  exportConnectionsToJSON: (connections: SSHConnection[]) => void;
-  exportTunnelsToCSV: (tunnels: SSHTunnel[]) => void;
-  exportTunnelsToJSON: (tunnels: SSHTunnel[]) => void;
-  importConnectionsFromCSV: (file: File) => Promise<SSHConnection[]>;
-  importConnectionsFromJSON: (file: File) => Promise<SSHConnection[]>;
-  importTunnelsFromCSV: (file: File) => Promise<SSHTunnel[]>;
-  importTunnelsFromJSON: (file: File) => Promise<SSHTunnel[]>;
+  exportConnectionsToCSV: (connections: SSHConnection[], includePasswords?: boolean) => void;
+  exportConnectionsToJSON: (connections: SSHConnection[], includePasswords?: boolean) => void;
+  exportTunnelsToCSV: (tunnels: SSHTunnel[], includePasswords?: boolean) => void;
+  exportTunnelsToJSON: (tunnels: SSHTunnel[], includePasswords?: boolean) => void;
+  exportAccountsToCSV: (accounts: SSHAccount[], includePasswords?: boolean) => void;
+  exportAccountsToJSON: (accounts: SSHAccount[], includePasswords?: boolean) => void;
+  importConnectionsFromCSV: (file: File, keepPasswords?: boolean) => Promise<SSHConnection[]>;
+  importConnectionsFromJSON: (file: File, keepPasswords?: boolean) => Promise<SSHConnection[]>;
+  importTunnelsFromCSV: (file: File, keepPasswords?: boolean) => Promise<SSHTunnel[]>;
+  importTunnelsFromJSON: (file: File, keepPasswords?: boolean) => Promise<SSHTunnel[]>;
+  importAccountsFromCSV: (file: File, keepPasswords?: boolean) => Promise<SSHAccount[]>;
+  importAccountsFromJSON: (file: File, keepPasswords?: boolean) => Promise<SSHAccount[]>;
 }
 
 // CSV conversion utilities
@@ -43,6 +47,25 @@ function tunnelToCSVRow(tunnel: SSHTunnel): string {
     tunnel.username,
     tunnel.group || '',
     tunnel.createdAt
+  ];
+  
+  return fields.map(field => {
+    if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+      return `"${field.replace(/"/g, '""')}"`;
+    }
+    return field;
+  }).join(',');
+}
+
+function accountToCSVRow(account: SSHAccount): string {
+  const authMethod = account.privateKey ? 'privateKey' : 'password';
+  const fields = [
+    account.name,
+    account.username,
+    authMethod,
+    account.description || '',
+    account.group || '',
+    account.createdAt
   ];
   
   return fields.map(field => {
@@ -109,41 +132,59 @@ function readFileAsText(file: File): Promise<string> {
 
 export const importExportService: ImportExportService = {
   // Connection exports
-  exportConnectionsToCSV: (connections: SSHConnection[]) => {
+  exportConnectionsToCSV: (connections: SSHConnection[], includePasswords = false) => {
     const header = 'Name,Host,Port,Username,Auth Method,Group,Color,Tunnel ID,Created At\n';
-    const rows = connections.map(connectionToCSVRow).join('\n');
+    const exportData = includePasswords ? connections : connections.map(conn => ({
+      ...conn,
+      password: undefined,
+      privateKey: undefined
+    }));
+    const rows = exportData.map(connectionToCSVRow).join('\n');
     const content = header + rows;
     
     const timestamp = new Date().toISOString().split('T')[0];
     downloadFile(content, `ssh-connections-${timestamp}.csv`, 'text/csv');
   },
 
-  exportConnectionsToJSON: (connections: SSHConnection[]) => {
-    const content = JSON.stringify(connections, null, 2);
+  exportConnectionsToJSON: (connections: SSHConnection[], includePasswords = false) => {
+    const exportData = includePasswords ? connections : connections.map(conn => ({
+      ...conn,
+      password: undefined,
+      privateKey: undefined
+    }));
+    const content = JSON.stringify(exportData, null, 2);
     
     const timestamp = new Date().toISOString().split('T')[0];
     downloadFile(content, `ssh-connections-${timestamp}.json`, 'application/json');
   },
 
   // Tunnel exports
-  exportTunnelsToCSV: (tunnels: SSHTunnel[]) => {
+  exportTunnelsToCSV: (tunnels: SSHTunnel[], includePasswords = false) => {
     const header = 'Name,Host,Port,Username,Group,Created At\n';
-    const rows = tunnels.map(tunnelToCSVRow).join('\n');
+    const exportData = includePasswords ? tunnels : tunnels.map(tunnel => ({
+      ...tunnel,
+      password: undefined
+    }));
+    const rows = exportData.map(tunnelToCSVRow).join('\n');
     const content = header + rows;
     
     const timestamp = new Date().toISOString().split('T')[0];
     downloadFile(content, `ssh-tunnels-${timestamp}.csv`, 'text/csv');
   },
 
-  exportTunnelsToJSON: (tunnels: SSHTunnel[]) => {
-    const content = JSON.stringify(tunnels, null, 2);
+  exportTunnelsToJSON: (tunnels: SSHTunnel[], includePasswords = false) => {
+    const exportData = includePasswords ? tunnels : tunnels.map(tunnel => ({
+      ...tunnel,
+      password: undefined
+    }));
+    const content = JSON.stringify(exportData, null, 2);
     
     const timestamp = new Date().toISOString().split('T')[0];
     downloadFile(content, `ssh-tunnels-${timestamp}.json`, 'application/json');
   },
 
   // Connection imports
-  importConnectionsFromCSV: async (file: File): Promise<SSHConnection[]> => {
+  importConnectionsFromCSV: async (file: File, keepPasswords = false): Promise<SSHConnection[]> => {
     const content = await readFileAsText(file);
     const lines = content.split('\n').filter(line => line.trim());
     
@@ -170,8 +211,8 @@ export const importExportService: ImportExportService = {
         host: row[1],
         port: parseInt(row[2]) || 22,
         username: row[3],
-        password: isPrivateKey ? undefined : '', // Passwords are not exported for security
-        privateKey: isPrivateKey ? '' : undefined, // Private keys are not exported for security
+        password: keepPasswords && !isPrivateKey ? '' : undefined,
+        privateKey: keepPasswords && isPrivateKey ? '' : undefined,
         group: row[5] || undefined,
         color: row[6] || '#3b82f6',
         tunnelId: row[7] || undefined,
@@ -184,7 +225,7 @@ export const importExportService: ImportExportService = {
     return connections;
   },
 
-  importConnectionsFromJSON: async (file: File): Promise<SSHConnection[]> => {
+  importConnectionsFromJSON: async (file: File, keepPasswords = false): Promise<SSHConnection[]> => {
     const content = await readFileAsText(file);
     const data = JSON.parse(content);
     
@@ -198,8 +239,9 @@ export const importExportService: ImportExportService = {
       host: item.host || 'localhost',
       port: item.port || 22,
       username: item.username || 'root',
-      password: item.authMethod === 'privateKey' ? undefined : '', // Reset for security
-      privateKey: item.authMethod === 'privateKey' ? '' : undefined, // Reset for security
+      password: keepPasswords && item.password ? item.password : undefined,
+      privateKey: keepPasswords && item.privateKey ? item.privateKey : undefined,
+      accountId: item.accountId,
       group: item.group,
       color: item.color || '#3b82f6',
       tunnelId: item.tunnelId,
@@ -208,7 +250,7 @@ export const importExportService: ImportExportService = {
   },
 
   // Tunnel imports
-  importTunnelsFromCSV: async (file: File): Promise<SSHTunnel[]> => {
+  importTunnelsFromCSV: async (file: File, keepPasswords = false): Promise<SSHTunnel[]> => {
     const content = await readFileAsText(file);
     const lines = content.split('\n').filter(line => line.trim());
     
@@ -233,7 +275,7 @@ export const importExportService: ImportExportService = {
         host: row[1],
         port: parseInt(row[2]) || 22,
         username: row[3],
-        password: '', // Passwords are not exported for security
+        password: keepPasswords ? '' : undefined,
         group: row[4] || undefined,
         createdAt: row[5] || new Date().toISOString()
       };
@@ -244,7 +286,7 @@ export const importExportService: ImportExportService = {
     return tunnels;
   },
 
-  importTunnelsFromJSON: async (file: File): Promise<SSHTunnel[]> => {
+  importTunnelsFromJSON: async (file: File, keepPasswords = false): Promise<SSHTunnel[]> => {
     const content = await readFileAsText(file);
     const data = JSON.parse(content);
     
@@ -258,7 +300,92 @@ export const importExportService: ImportExportService = {
       host: item.host || 'localhost',
       port: item.port || 22,
       username: item.username || 'root',
-      password: '', // Reset for security
+      password: keepPasswords && item.password ? item.password : undefined,
+      group: item.group,
+      createdAt: item.createdAt || new Date().toISOString()
+    }));
+  },
+
+  // Account exports
+  exportAccountsToCSV: (accounts: SSHAccount[], includePasswords = false) => {
+    const header = 'Name,Username,Auth Method,Description,Group,Created At\n';
+    const exportData = includePasswords ? accounts : accounts.map(account => ({
+      ...account,
+      password: undefined,
+      privateKey: undefined
+    }));
+    const rows = exportData.map(accountToCSVRow).join('\n');
+    const content = header + rows;
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    downloadFile(content, `ssh-accounts-${timestamp}.csv`, 'text/csv');
+  },
+
+  exportAccountsToJSON: (accounts: SSHAccount[], includePasswords = false) => {
+    const exportData = includePasswords ? accounts : accounts.map(account => ({
+      ...account,
+      password: undefined,
+      privateKey: undefined
+    }));
+    const content = JSON.stringify(exportData, null, 2);
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    downloadFile(content, `ssh-accounts-${timestamp}.json`, 'application/json');
+  },
+
+  // Account imports
+  importAccountsFromCSV: async (file: File, keepPasswords = false): Promise<SSHAccount[]> => {
+    const content = await readFileAsText(file);
+    const lines = content.split('\n').filter(line => line.trim());
+    
+    if (lines.length < 2) {
+      throw new Error('CSV file must contain a header row and at least one data row');
+    }
+    
+    const dataLines = lines.slice(1);
+    const accounts: SSHAccount[] = [];
+    
+    for (let i = 0; i < dataLines.length; i++) {
+      const row = parseCSVRow(dataLines[i]);
+      
+      if (row.length < 6) {
+        console.warn(`Skipping row ${i + 2}: insufficient columns`);
+        continue;
+      }
+      
+      const isPrivateKey = row[2] === 'privateKey';
+      const account: SSHAccount = {
+        id: crypto.randomUUID(),
+        name: row[0],
+        username: row[1],
+        password: keepPasswords && !isPrivateKey ? '' : undefined,
+        privateKey: keepPasswords && isPrivateKey ? '' : undefined,
+        description: row[3] || undefined,
+        group: row[4] || undefined,
+        createdAt: row[5] || new Date().toISOString()
+      };
+      
+      accounts.push(account);
+    }
+    
+    return accounts;
+  },
+
+  importAccountsFromJSON: async (file: File, keepPasswords = false): Promise<SSHAccount[]> => {
+    const content = await readFileAsText(file);
+    const data = JSON.parse(content);
+    
+    if (!Array.isArray(data)) {
+      throw new Error('JSON file must contain an array of accounts');
+    }
+    
+    return data.map((item: any) => ({
+      id: crypto.randomUUID(),
+      name: item.name || 'Imported Account',
+      username: item.username || 'root',
+      password: keepPasswords && item.password ? item.password : undefined,
+      privateKey: keepPasswords && item.privateKey ? item.privateKey : undefined,
+      description: item.description,
       group: item.group,
       createdAt: item.createdAt || new Date().toISOString()
     }));
