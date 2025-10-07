@@ -3,12 +3,14 @@ import { ConnectionManager } from './components/ConnectionManager';
 import { Terminal } from './components/Terminal';
 import { TunnelManager } from './components/TunnelManager';
 import { Tabs } from './components/Tabs';
+import { HelpModal } from './components/HelpModal';
 import { useConnectionStore } from './store/connectionStore';
-import { Server, Network, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Server, Network, PanelLeftClose, PanelLeft, HelpCircle } from 'lucide-react';
 
 function App() {
   const [view, setView] = useState<'connections' | 'tunnels'>('connections');
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
   const { activeSessionId } = useConnectionStore();
 
   return (
@@ -56,6 +58,14 @@ function App() {
             <Network className="w-4 h-4" />
             <span>Tunnels</span>
           </button>
+          <button
+            onClick={() => setHelpModalOpen(true)}
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors bg-slate-700 text-slate-300 hover:bg-slate-600"
+            title="Help & Documentation"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span>Help</span>
+          </button>
         </div>
       </header>
 
@@ -100,6 +110,12 @@ function App() {
           )}
         </main>
       </div>
+
+      {/* Help Modal */}
+      <HelpModal 
+        isOpen={helpModalOpen} 
+        onClose={() => setHelpModalOpen(false)} 
+      />
     </div>
   );
 }

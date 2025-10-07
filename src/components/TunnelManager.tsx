@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useConnectionStore } from '../store/connectionStore';
-import { Plus, Network, Trash2, Edit2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Network, Trash2, Edit2, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { TunnelForm } from './TunnelForm';
+import { ImportExportModal } from './ImportExportModal';
+import { SSHTunnel } from '../types';
 
 export function TunnelManager() {
-  const { tunnels, deleteTunnel } = useConnectionStore();
+  const { tunnels, deleteTunnel, addTunnel } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [importExportOpen, setImportExportOpen] = useState(false);
 
   // Group tunnels by group field
   const groupedTunnels = useMemo(() => {
@@ -56,9 +59,15 @@ export function TunnelManager() {
     }
   };
 
+  const handleImport = (importedTunnels: SSHTunnel[] | any[]) => {
+    (importedTunnels as SSHTunnel[]).forEach(tunnel => {
+      addTunnel(tunnel);
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-slate-700 space-y-2">
         <button
           onClick={() => {
             setEditingId(null);
@@ -68,6 +77,14 @@ export function TunnelManager() {
         >
           <Plus className="w-4 h-4" />
           <span>New Tunnel</span>
+        </button>
+        
+        <button
+          onClick={() => setImportExportOpen(true)}
+          className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+        >
+          <FileText className="w-4 h-4" />
+          <span>Import/Export</span>
         </button>
       </div>
 
@@ -150,6 +167,16 @@ export function TunnelManager() {
             setIsFormOpen(false);
             setEditingId(null);
           }}
+        />
+      )}
+
+      {importExportOpen && (
+        <ImportExportModal
+          isOpen={importExportOpen}
+          onClose={() => setImportExportOpen(false)}
+          type="tunnels"
+          data={tunnels}
+          onImport={handleImport}
         />
       )}
     </div>

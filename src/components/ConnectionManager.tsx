@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useConnectionStore } from '../store/connectionStore';
-import { Plus, Server, Trash2, Edit2, Play, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Server, Trash2, Edit2, Play, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { ConnectionForm } from './ConnectionForm';
+import { ImportExportModal } from './ImportExportModal';
+import { SSHConnection } from '../types';
 
 export function ConnectionManager() {
-  const { connections, deleteConnection, createSession } = useConnectionStore();
+  const { connections, deleteConnection, createSession, addConnection } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [importExportOpen, setImportExportOpen] = useState(false);
 
   // Group connections by group field
   const groupedConnections = useMemo(() => {
@@ -60,9 +63,15 @@ export function ConnectionManager() {
     }
   };
 
+  const handleImport = (importedConnections: SSHConnection[] | any[]) => {
+    (importedConnections as SSHConnection[]).forEach(conn => {
+      addConnection(conn);
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-slate-700 space-y-2">
         <button
           onClick={() => {
             setEditingId(null);
@@ -72,6 +81,14 @@ export function ConnectionManager() {
         >
           <Plus className="w-4 h-4" />
           <span>New Connection</span>
+        </button>
+        
+        <button
+          onClick={() => setImportExportOpen(true)}
+          className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+        >
+          <FileText className="w-4 h-4" />
+          <span>Import/Export</span>
         </button>
       </div>
 
@@ -167,6 +184,16 @@ export function ConnectionManager() {
             setIsFormOpen(false);
             setEditingId(null);
           }}
+        />
+      )}
+
+      {importExportOpen && (
+        <ImportExportModal
+          isOpen={importExportOpen}
+          onClose={() => setImportExportOpen(false)}
+          type="connections"
+          data={connections}
+          onImport={handleImport}
         />
       )}
     </div>
