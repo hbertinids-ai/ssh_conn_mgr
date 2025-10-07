@@ -1,6 +1,6 @@
 import { MouseEvent } from 'react';
 import { useConnectionStore } from '../store/connectionStore';
-import { X } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 
 export function Tabs() {
   const { sessions, activeSessionId, setActiveSession, closeSession } = useConnectionStore();
@@ -9,6 +9,13 @@ export function Tabs() {
     e.stopPropagation();
     if (window.confirm('Close this session?')) {
       closeSession(sessionId);
+    }
+  };
+
+  const handleSave = (e: MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    if ((window as any).saveTerminalOutput) {
+      (window as any).saveTerminalOutput(sessionId);
     }
   };
 
@@ -41,6 +48,13 @@ export function Tabs() {
             {session.status === 'error' && (
               <div className="w-2 h-2 bg-red-400 rounded-full" />
             )}
+            <button
+              onClick={(e) => handleSave(e, session.id)}
+              className="p-1 hover:bg-slate-600 rounded transition-colors"
+              title="Save output to file"
+            >
+              <Download className="w-3 h-3" />
+            </button>
             <button
               onClick={(e) => handleClose(e, session.id)}
               className="p-1 hover:bg-slate-600 rounded transition-colors"

@@ -8,9 +8,13 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.invoke('ssh:resize', { id, rows, cols }),
     disconnect: (id: string) => ipcRenderer.invoke('ssh:disconnect', { id }),
     onData: (callback: (data: any) => void) => {
+      // Remove existing listeners first to prevent duplicates
+      ipcRenderer.removeAllListeners('ssh:data');
       ipcRenderer.on('ssh:data', (event, data) => callback(data));
     },
     onClose: (callback: (data: any) => void) => {
+      // Remove existing listeners first to prevent duplicates
+      ipcRenderer.removeAllListeners('ssh:close');
       ipcRenderer.on('ssh:close', (event, data) => callback(data));
     },
   },

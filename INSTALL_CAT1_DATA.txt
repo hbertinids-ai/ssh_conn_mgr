@@ -1,0 +1,152 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   ✅ CAT1 CONNECTION DATA - INSTALLATION INSTRUCTIONS       ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+📋 WHAT YOU'RE GETTING
+══════════════════════════════════════════════════════════════
+
+1 SSH tunnel + 22 SSH connections in "CAT1 Connection" group:
+  • 1 tunnel: "CAT Legacy Env Tunnel"
+  • 16 main connections (using host IP, via tunnel)
+  • 6 "direct" connections (using NATed IP, no tunnel)
+
+
+🚀 3-STEP INSTALLATION
+══════════════════════════════════════════════════════════════
+
+STEP 1: Open the App
+────────────────────────────────────────────────────────────
+  The app is already running at: http://localhost:5173
+  
+  (If not, run: npm run dev)
+
+
+STEP 2: Open the Script File
+────────────────────────────────────────────────────────────
+  In VS Code, open:
+  
+    📄 scripts/populate-cat1-data.js
+  
+  Then:
+    1. Select all (Ctrl+A)
+    2. Copy (Ctrl+C)
+
+
+STEP 3: Run in Browser Console
+────────────────────────────────────────────────────────────
+  In the app browser window:
+    1. Press F12 (opens Developer Tools)
+    2. Click "Console" tab
+    3. Paste the script (Ctrl+V)
+    4. Press Enter
+    5. Press F5 to refresh the page
+
+
+✅ DONE!
+══════════════════════════════════════════════════════════════
+
+You should now see:
+  • Connections tab: "CAT1 Connection (22)"
+  • Tunnels tab: "CAT1 Connection (1)" with "CAT Legacy Env Tunnel"
+
+
+📊 WHAT GOT ADDED
+══════════════════════════════════════════════════════════════
+
+Tunnel (1):
+  ✓ CAT Legacy Env Tunnel (⚠️ requires configuration)
+
+Main Connections (16) - via tunnel:
+  ✓ Aurora Ops Automation GUI → 10.6.54.224 🔒
+  ✓ Aurora DB1 → 10.6.53.91 🔒
+  ✓ Aurora DB2 → 10.6.53.92 🔒
+  ✓ Aurora Navigator 1 → 10.6.52.77 🔒
+  ✓ Aurora Navigator 2 → 10.6.52.78 🔒
+  ✓ Aurora Navigator VIP → 10.6.52.240 🔒
+  ✓ Aurora Navigator Proxy 1 → 10.6.51.219 🔒
+  ✓ Aurora Navigator Proxy 2 → 10.6.51.220 🔒
+  ✓ Aurora Navigator Proxy VIP → 10.6.51.240 🔒
+  ✓ ARTE 1 → 10.6.43.10 🔒
+  ✓ ARTE 2 → 10.6.43.11 🔒
+  ✓ ARTE VIP → 10.6.43.240 🔒
+  ✓ Identity Manager 1 → 10.6.54.48 🔒
+  ✓ Identity Manager 2 → 10.6.54.49 🔒
+  ✓ IGT Gateway → 10.6.46.198 🔒
+  ✓ SYSLOG → 10.6.54.196 🔒
+
+Direct Connections (6) - no tunnel:
+  ✓ ptlc1s1ardb21 direct → 10.93.1.190 🔗
+  ✓ ptlc1s1ardb22 direct → 10.93.1.191 🔗
+  ✓ ptlc1s1arte21 direct → 10.93.1.192 🔗
+  ✓ ptlc1s1arte22 direct → 10.93.1.193 🔗
+  ✓ ptlc1s1igtgw21 direct → 10.93.1.200 🔗
+
+🔒 = Uses CAT Legacy Env Tunnel
+🔗 = Direct connection (bypasses tunnel)
+
+
+⚙️ NEXT STEPS
+══════════════════════════════════════════════════════════════
+
+1. CONFIGURE THE TUNNEL FIRST! ⚠️
+   Go to Tunnels tab → CAT1 Connection group
+   Click pencil (✏️) on "CAT Legacy Env Tunnel"
+   Set: Host, Username, Password for your jump server
+   Click Save
+
+2. SET CONNECTION PASSWORDS
+   Go to Connections tab → CAT1 Connection group
+   Click the pencil icon (✏️) on each connection
+   Add passwords and click Save
+
+3. UPDATE USERNAMES (if needed)
+   Default username is "root"
+   Edit connections if you use a different username
+
+4. TEST CONNECTIONS
+   Main connections will connect through the tunnel automatically
+   "direct" connections bypass the tunnel
+   Click play button (▶️) to connect
+
+
+💡 TIPS
+══════════════════════════════════════════════════════════════
+
+• Click "CAT1 Connection" header to collapse/expand the group
+• Use the search feature - type "CAT1" to filter
+• Each connection has a unique color for tab identification
+• You can open multiple tabs for the same connection
+• All changes are automatically saved
+
+
+🆘 TROUBLESHOOTING
+══════════════════════════════════════════════════════════════
+
+Nothing happened?
+  → Make sure you copied the ENTIRE script file
+  → Check for red errors in the console
+  
+Don't see connections?
+  → Press F5 to refresh the page
+  → Check if "CAT1 Connection" group is collapsed
+  
+Have duplicates?
+  → Click trash icon (🗑️) to delete unwanted connections
+  → Or clear all: localStorage.clear() in console
+
+
+📚 DOCUMENTATION
+══════════════════════════════════════════════════════════════
+
+  📄 CAT1_DATA_READY.md - This summary
+  📄 CAT1_SETUP_GUIDE.md - Detailed setup guide
+  📄 scripts/README.md - Technical documentation
+  📄 scripts/populate-cat1-data.js - The script to run
+
+
+══════════════════════════════════════════════════════════════
+                    🎉 You're all set!
+══════════════════════════════════════════════════════════════

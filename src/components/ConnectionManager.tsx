@@ -7,7 +7,6 @@ export function ConnectionManager() {
   const { connections, deleteConnection, createSession } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Group connections by group field
   const groupedConnections = useMemo(() => {
@@ -23,6 +22,16 @@ export function ConnectionManager() {
     
     return groups;
   }, [connections]);
+
+  // Initialize all groups as collapsed
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
+    const groupNames = new Set<string>();
+    connections.forEach((conn) => {
+      const groupName = conn.group || 'Ungrouped';
+      groupNames.add(groupName);
+    });
+    return groupNames;
+  });
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups((prev) => {
@@ -102,15 +111,15 @@ export function ConnectionManager() {
                       key={connection.id}
                       className="card p-4 hover:border-slate-600 transition-all group"
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2 flex-1">
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <div className="flex items-start space-x-2 flex-1 min-w-0">
                           <div
-                            className="w-3 h-3 rounded-full"
+                            className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
                             style={{ backgroundColor: connection.color }}
                           />
-                          <h3 className="font-medium text-white truncate">{connection.name}</h3>
+                          <h3 className="font-medium text-white break-words">{connection.name}</h3>
                         </div>
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                           <button
                             onClick={() => handleConnect(connection.id)}
                             className="p-1.5 hover:bg-slate-700 rounded transition-colors"

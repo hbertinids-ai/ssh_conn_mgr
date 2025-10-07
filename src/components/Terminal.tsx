@@ -9,6 +9,7 @@ interface TerminalInstance {
   term: XTerm;
   fitAddon: FitAddon;
   element: HTMLDivElement;
+  outputBuffer: string[]; // Store all output for saving
 }
 
 export function Terminal() {
@@ -16,12 +17,62 @@ export function Terminal() {
   const terminalsRef = useRef<Map<string, TerminalInstance>>(new Map());
   const { sessions, activeSessionId, setSessionStatus, closeSession } = useConnectionStore();
 
+  // Function to save terminal output
+  const saveOutput = (sessionId: string) => {
+    const termInstance = terminalsRef.current.get(sessionId);
+    const session = sessions.find(s => s.id === sessionId);
+    
+    if (!termInstance || !session) return;
+
+    try {
+      // Get terminal buffer content (visible content)
+      const buffer = termInstance.term.buffer.active;
+      const lines: string[] = [];
+      
+      for (let i = 0; i < buffer.length; i++) {
+        const line = buffer.getLine(i);
+        if (line) {
+          lines.push(line.translateToString(true));
+        }
+      }
+
+      const content = lines.join('\n');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T');
+      const date = timestamp[0];
+      const time = timestamp[1].substring(0, 8);
+      const filename = `${session.connection.name}_${date}_${time}.txt`;
+
+      // Create blob and download
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      console.log(`Saved session output to ${filename}`);
+    } catch (error) {
+      console.error('Error saving output:', error);
+    }
+  };
+
+  // Expose save function globally for tabs to use
+  useEffect(() => {
+    (window as any).saveTerminalOutput = saveOutput;
+    return () => {
+      delete (window as any).saveTerminalOutput;
+    };
+  }, [sessions]);
+
   // Setup global SSH event handlers once
   useEffect(() => {
     const handleData = (data: any) => {
       const termInstance = terminalsRef.current.get(data.id);
       if (termInstance) {
         termInstance.term.write(data.data);
+        // Capture received data in buffer
+        termInstance.outputBuffer.push(data.data);
       }
     };
 
@@ -35,7 +86,7 @@ export function Terminal() {
 
     window.electron.ssh.onData(handleData);
     window.electron.ssh.onClose(handleClose);
-  }, []);
+  }, [closeSession]);
 
   // Manage terminal instances for all sessions
   useEffect(() => {
@@ -88,7 +139,9 @@ export function Terminal() {
         setTimeout(() => fitAddon.fit(), 0);
 
         container.appendChild(terminalDiv);
-        terminalsRef.current.set(session.id, { term, fitAddon, element: terminalDiv });
+        
+        const outputBuffer: string[] = [];
+        terminalsRef.current.set(session.id, { term, fitAddon, element: terminalDiv, outputBuffer });
 
         // Connect to SSH
         const connectSSH = async () => {
@@ -143,7 +196,8 @@ export function Terminal() {
 
         connectSSH();
 
-        // Handle terminal input
+        // Handle terminal input - only send to SSH, don't capture locally
+        // The server will echo back, and we'll capture that in handleData
         term.onData((data) => {
           window.electron.ssh.write(session.id, data);
         });
@@ -175,7 +229,10 @@ export function Terminal() {
     terminalsRef.current.forEach((instance, id) => {
       instance.element.style.display = id === activeSessionId ? 'block' : 'none';
       if (id === activeSessionId) {
-        setTimeout(() => instance.fitAddon.fit(), 0);
+        setTimeout(() => {
+          instance.fitAddon.fit();
+          instance.term.focus(); // Auto-focus the terminal
+        }, 0);
       }
     });
   }, [sessions, activeSessionId]);

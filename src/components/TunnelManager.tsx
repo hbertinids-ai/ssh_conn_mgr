@@ -7,7 +7,6 @@ export function TunnelManager() {
   const { tunnels, deleteTunnel } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Group tunnels by group field
   const groupedTunnels = useMemo(() => {
@@ -23,6 +22,16 @@ export function TunnelManager() {
     
     return groups;
   }, [tunnels]);
+
+  // Initialize all groups as collapsed
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
+    const groupNames = new Set<string>();
+    tunnels.forEach((tunnel) => {
+      const groupName = tunnel.group || 'Ungrouped';
+      groupNames.add(groupName);
+    });
+    return groupNames;
+  });
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups((prev) => {
@@ -98,12 +107,12 @@ export function TunnelManager() {
                       key={tunnel.id}
                       className="card p-4 hover:border-slate-600 transition-all group"
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2 flex-1">
-                          <Network className="w-4 h-4 text-primary-400" />
-                          <h3 className="font-medium text-white truncate">{tunnel.name}</h3>
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <div className="flex items-start space-x-2 flex-1 min-w-0">
+                          <Network className="w-4 h-4 text-primary-400 flex-shrink-0 mt-1" />
+                          <h3 className="font-medium text-white break-words">{tunnel.name}</h3>
                         </div>
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                           <button
                             onClick={() => handleEdit(tunnel.id)}
                             className="p-1.5 hover:bg-slate-700 rounded transition-colors"

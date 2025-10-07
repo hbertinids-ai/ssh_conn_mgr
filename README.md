@@ -8,6 +8,8 @@ A modern, beautiful SSH connection manager built with Electron, React, and TypeS
 - 🔐 **SSH Tunnel Support** - Connect through SSH tunnels (jump hosts/bastion servers)
 - 🔑 **Multiple Authentication** - Support for password and private key authentication
 - 💾 **Connection Management** - Full CRUD operations for connections and tunnels
+- 📁 **Connection Grouping** - Organize connections and tunnels into collapsible groups
+- 💾 **Save Session Output** - Export terminal session logs to text files with one click
 - 🎨 **Beautiful UI** - Clean, modern interface built with Tailwind CSS
 - ⚡ **Fast & Responsive** - Built on Electron with React for optimal performance
 - 🎯 **Color-Coded Connections** - Visual distinction between different connections
@@ -55,6 +57,10 @@ npm run build:electron
 
 ## Usage
 
+### Quick Start: Populate CAT1 Connection Data
+
+Want to quickly add 22 pre-configured CAT1 connections? See **[CAT1_DATA_READY.md](CAT1_DATA_READY.md)** for instructions!
+
 ### Creating a Connection
 
 1. Click "New Connection" in the sidebar
@@ -63,6 +69,7 @@ npm run build:electron
    - Host and Port
    - Username
    - Password or Private Key
+   - Optional: Group (e.g., "Production", "Development")
    - Optional: Select an SSH Tunnel
 3. Click "Create Connection"
 
