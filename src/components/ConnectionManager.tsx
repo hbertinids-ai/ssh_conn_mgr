@@ -125,59 +125,59 @@ export function ConnectionManager() {
                   </span>
                 </button>
 
-              {/* Group Connections */}
-              {!collapsedGroups.has(groupName) && (
-                <div className="space-y-2 ml-2">
-                  {groupConnections.map((connection) => (
-                    <div
-                      key={connection.id}
-                      className="card p-4 hover:border-slate-600 transition-all group"
-                    >
-                      <div className="flex items-start justify-between mb-2 gap-2">
-                        <div className="flex items-start space-x-2 flex-1 min-w-0">
-                          <div
-                            className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
-                            style={{ backgroundColor: connection.color }}
-                          />
-                          <h3 className="font-medium text-white break-words">{connection.name}</h3>
+                {/* Group Connections */}
+                {!collapsedGroups.has(groupId) && (
+                  <div className="space-y-2 ml-2">
+                    {groupConnections.map((connection) => (
+                      <div
+                        key={connection.id}
+                        className="card p-4 hover:border-slate-600 transition-all group"
+                      >
+                        <div className="flex items-start justify-between mb-2 gap-2">
+                          <div className="flex items-start space-x-2 flex-1 min-w-0">
+                            <div
+                              className="w-3 h-3 rounded-full flex-shrink-0 mt-1"
+                              style={{ backgroundColor: connection.color }}
+                            />
+                            <h3 className="font-medium text-white break-words">{connection.name}</h3>
+                          </div>
+                          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                            <button
+                              onClick={() => handleConnect(connection.id)}
+                              className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                              title="Connect"
+                            >
+                              <Play className="w-4 h-4 text-green-400" />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(connection.id)}
+                              className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4 text-blue-400" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(connection.id)}
+                              className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          <button
-                            onClick={() => handleConnect(connection.id)}
-                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                            title="Connect"
-                          >
-                            <Play className="w-4 h-4 text-green-400" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(connection.id)}
-                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-4 h-4 text-blue-400" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(connection.id)}
-                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </button>
+                        <div className="text-sm text-slate-400 space-y-1">
+                          <p className="font-mono">
+                            {connection.username}@{connection.host}:{connection.port}
+                          </p>
+                          {connection.tunnelId && (
+                            <p className="text-xs text-primary-400">via tunnel</p>
+                          )}
                         </div>
                       </div>
-                      <div className="text-sm text-slate-400 space-y-1">
-                        <p className="font-mono">
-                          {connection.username}@{connection.host}:{connection.port}
-                        </p>
-                        {connection.tunnelId && (
-                          <p className="text-xs text-primary-400">via tunnel</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })
         )}
