@@ -45,3 +45,30 @@ coverage/
 # OS files
 Thumbs.db
 .DS_Store
+
+# Sensitive data and scripts
+scripts/populate-*.ts
+scripts/populate-*.js
+scripts/*data*.ts
+scripts/*data*.js
+**/connections.csv
+**/tunnels.csv
+**/accounts.csv
+**/servers.txt
+**/hosts.txt
+data/
+*.db
+*.sqlite
+
+# Credentials and keys
+*.pem
+*.key
+id_rsa*
+known_hosts
+secrets/
+credentials/
+
+# User data
+user-data/
+connections-backup/
+exports/
