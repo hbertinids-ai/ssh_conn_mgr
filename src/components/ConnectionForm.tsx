@@ -8,7 +8,7 @@ interface ConnectionFormProps {
 }
 
 export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
-  const { connections, tunnels, accounts, addConnection, updateConnection } = useConnectionStore();
+  const { connections, tunnels, accounts, groups, addConnection, updateConnection } = useConnectionStore();
   const connection = connectionId ? connections.find((c) => c.id === connectionId) : null;
 
   const [formData, setFormData] = useState({
@@ -20,17 +20,8 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
     privateKey: '',
     tunnelId: '',
     accountId: '',
-    group: '',
+    groupId: '',
   });
-
-  // Get unique groups from all entities (connections, tunnels, accounts)
-  const existingGroups = Array.from(
-    new Set([
-      ...connections.map(c => c.group).filter(Boolean),
-      ...tunnels.map(t => t.group).filter(Boolean),
-      ...accounts.map(a => a.group).filter(Boolean),
-    ])
-  ) as string[];
 
   useEffect(() => {
     if (connection) {
@@ -43,7 +34,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
         privateKey: connection.privateKey || '',
         tunnelId: connection.tunnelId || '',
         accountId: connection.accountId || '',
-        group: connection.group || '',
+        groupId: connection.groupId || '',
       });
     }
   }, [connection]);
@@ -57,7 +48,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
       privateKey: formData.privateKey || undefined,
       tunnelId: formData.tunnelId || undefined,
       accountId: formData.accountId || undefined,
-      group: formData.group || undefined,
+      groupId: formData.groupId || undefined,
     };
 
     if (connectionId) {
@@ -145,11 +136,15 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               title="Select an account to use its credentials"
             >
               <option value="">Manual entry</option>
-              {accounts.map(account => (
-                <option key={account.id} value={account.id}>
-                  {account.group ? `${account.group} / ` : ''}{account.name} ({account.username})
-                </option>
-              ))}
+              {accounts.map(account => {
+                const accountGroup = account.groupId ? groups.find(g => g.id === account.groupId) : null;
+                const displayName = accountGroup ? `${accountGroup.name} / ${account.name}` : account.name;
+                return (
+                  <option key={account.id} value={account.id}>
+                    {displayName} ({account.username})
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -201,20 +196,19 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Group (optional)
             </label>
-            <input
-              type="text"
-              list="connection-groups"
+            <select
               className="input-field"
-              value={formData.group}
-              onChange={(e) => setFormData({ ...formData, group: e.target.value })}
-              placeholder="e.g., Production, Development"
-              title="Select an existing group or type a new group name"
-            />
-            <datalist id="connection-groups">
-              {existingGroups.map((group) => (
-                <option key={group} value={group} />
+              value={formData.groupId}
+              onChange={(e) => setFormData({ ...formData, groupId: e.target.value })}
+              title="Select a group to organize this connection"
+            >
+              <option value="">No group</option>
+              {groups.sort((a, b) => a.name.localeCompare(b.name)).map(group => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
               ))}
-            </datalist>
+            </select>
           </div>
 
           <div>

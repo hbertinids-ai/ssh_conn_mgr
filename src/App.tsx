@@ -3,34 +3,38 @@ import { ConnectionManager } from './components/ConnectionManager';
 import { Terminal } from './components/Terminal';
 import { TunnelManager } from './components/TunnelManager';
 import { AccountManager } from './components/AccountManager';
+import { GroupManager } from './components/GroupManager';
 import { Tabs } from './components/Tabs';
 import { HelpModal } from './components/HelpModal';
 import { ImportExportModal } from './components/ImportExportModal';
 import { useConnectionStore } from './store/connectionStore';
-import { Server, Network, PanelLeftClose, PanelLeft, HelpCircle, User } from 'lucide-react';
-import { SSHConnection, SSHTunnel, SSHAccount } from './types';
+import { Server, Network, PanelLeftClose, PanelLeft, HelpCircle, User, FolderTree } from 'lucide-react';
+import { SSHConnection, SSHTunnel, SSHAccount, SSHGroup } from './types';
 
 function App() {
-  const [view, setView] = useState<'connections' | 'tunnels' | 'accounts'>('connections');
+  const [view, setView] = useState<'connections' | 'tunnels' | 'accounts' | 'groups'>('connections');
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const [importExportModalOpen, setImportExportModalOpen] = useState(false);
-  const { activeSessionId, connections, tunnels, accounts, addConnection, addTunnel, addAccount } = useConnectionStore();
+  const { activeSessionId, connections, tunnels, accounts, groups, addConnection, addTunnel, addAccount, addGroup } = useConnectionStore();
 
-  const handleImport = (items: SSHConnection[] | SSHTunnel[] | SSHAccount[]) => {
+  const handleImport = (items: SSHConnection[] | SSHTunnel[] | SSHAccount[] | SSHGroup[]) => {
     if (view === 'connections') {
       (items as SSHConnection[]).forEach(conn => addConnection(conn));
     } else if (view === 'tunnels') {
       (items as SSHTunnel[]).forEach(tunnel => addTunnel(tunnel));
     } else if (view === 'accounts') {
       (items as SSHAccount[]).forEach(account => addAccount(account));
+    } else if (view === 'groups') {
+      (items as SSHGroup[]).forEach(group => addGroup(group));
     }
   };
 
   const getCurrentData = () => {
     if (view === 'connections') return connections;
     if (view === 'tunnels') return tunnels;
-    return accounts;
+    if (view === 'accounts') return accounts;
+    return groups;
   };
 
   return (
@@ -89,6 +93,17 @@ function App() {
             <User className="w-4 h-4" />
             <span>Accounts</span>
           </button>
+          <button
+            onClick={() => setView('groups')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+              view === 'groups'
+                ? 'bg-primary-600 text-white'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            <FolderTree className="w-4 h-4" />
+            <span>Groups</span>
+          </button>
           
           <div className="w-px h-6 bg-slate-600 mx-2"></div>
           
@@ -121,6 +136,12 @@ function App() {
         {sidebarVisible && view === 'accounts' && (
           <aside className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
             <AccountManager />
+          </aside>
+        )}
+
+        {sidebarVisible && view === 'groups' && (
+          <aside className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
+            <GroupManager />
           </aside>
         )}
 

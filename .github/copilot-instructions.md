@@ -15,6 +15,7 @@ Modern SSH connection manager with tabbed sessions, tunnel support, and beautifu
 - [x] Launch the Project - Ready to run with npm run dev
 - [x] Add Help Menu and Import/Export - Complete help system with data management
 - [x] Add Accounts Entity - Complete account system with credential reuse and grouping
+- [x] Refactor Groups to Entity System - ID-based group references with full CRUD
 - [x] Ensure Documentation is Complete - README and instructions complete with new features
 
 ## Technology Stack
@@ -27,16 +28,19 @@ Modern SSH connection manager with tabbed sessions, tunnel support, and beautifu
 
 ## Features Implemented
 - Tabbed SSH sessions with color-coded indicators
-- Full CRUD for connections, tunnels, and accounts
+- Full CRUD for connections, tunnels, accounts, and groups
 - SSH tunnel (jump host) support
 - Password and private key authentication
 - Account system with credential reuse across connections
-- Account and connection grouping with collapsible sections
-- Import/Export system for connections, tunnels, and accounts (CSV/JSON)
+- Group entity system with ID-based references and visual organization
+- Entity grouping with collapsible sections and color coding
+- Import/Export system for all entities (CSV/JSON)
+- Dropdown-based group selection (no free text for data integrity)
+- Automatic cleanup of group references on deletion
 - Help menu with comprehensive documentation
 - Beautiful, modern UI with Tailwind CSS
 - Terminal emulator with Xterm.js
 - Persistent storage with Zustand
 
 ## Last Updated
-Step: Added complete Accounts entity system - Ready for standalone release
+Step: Completed Group Entity Refactoring - ID-based groups with full CRUD and dropdown selection

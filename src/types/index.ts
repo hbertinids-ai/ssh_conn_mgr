@@ -1,3 +1,11 @@
+export interface SSHGroup {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  createdAt: string;
+}
+
 export interface SSHTunnel {
   id: string;
   name: string;
@@ -7,7 +15,7 @@ export interface SSHTunnel {
   password?: string;
   privateKey?: string;
   accountId?: string; // Reference to SSHAccount
-  group?: string;
+  groupId?: string; // Reference to SSHGroup
   createdAt: string;
 }
 
@@ -18,7 +26,7 @@ export interface SSHAccount {
   password?: string;
   privateKey?: string;
   description?: string;
-  group?: string;
+  groupId?: string; // Reference to SSHGroup
   createdAt: string;
 }
 
@@ -32,7 +40,7 @@ export interface SSHConnection {
   privateKey?: string;
   accountId?: string; // Reference to SSHAccount
   tunnelId?: string;
-  group?: string;
+  groupId?: string; // Reference to SSHGroup
   color?: string;
   createdAt: string;
 }

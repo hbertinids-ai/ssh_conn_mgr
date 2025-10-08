@@ -6,43 +6,43 @@ import { ImportExportModal } from './ImportExportModal';
 import { SSHTunnel } from '../types';
 
 export function TunnelManager() {
-  const { tunnels, deleteTunnel, addTunnel } = useConnectionStore();
+  const { tunnels, groups, deleteTunnel, addTunnel } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [importExportOpen, setImportExportOpen] = useState(false);
 
-  // Group tunnels by group field
+  // Group tunnels by groupId field
   const groupedTunnels = useMemo(() => {
-    const groups: Record<string, typeof tunnels> = {};
+    const groupMap: Record<string, typeof tunnels> = {};
     
     tunnels.forEach((tunnel) => {
-      const groupName = tunnel.group || 'Ungrouped';
-      if (!groups[groupName]) {
-        groups[groupName] = [];
+      const groupId = tunnel.groupId || 'Ungrouped';
+      if (!groupMap[groupId]) {
+        groupMap[groupId] = [];
       }
-      groups[groupName].push(tunnel);
+      groupMap[groupId].push(tunnel);
     });
     
-    return groups;
+    return groupMap;
   }, [tunnels]);
 
-  // Initialize all groups as collapsed
+  // Initialize all groups as collapsed (start with all groupIds in the set)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
-    const groupNames = new Set<string>();
+    const groupIds = new Set<string>();
     tunnels.forEach((tunnel) => {
-      const groupName = tunnel.group || 'Ungrouped';
-      groupNames.add(groupName);
+      const groupId = tunnel.groupId || 'Ungrouped';
+      groupIds.add(groupId);
     });
-    return groupNames;
+    return groupIds;
   });
 
-  const toggleGroup = (groupName: string) => {
+  const toggleGroup = (groupId: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev);
-      if (next.has(groupName)) {
-        next.delete(groupName);
+      if (next.has(groupId)) {
+        next.delete(groupId);
       } else {
-        next.add(groupName);
+        next.add(groupId);
       }
       return next;
     });
@@ -96,28 +96,33 @@ export function TunnelManager() {
             <p className="text-slate-600 text-xs mt-1">Add a tunnel for proxy connections</p>
           </div>
         ) : (
-          Object.entries(groupedTunnels).map(([groupName, groupTunnels]) => (
-            <div key={groupName} className="space-y-2">
-              {/* Group Header */}
-              <button
-                onClick={() => toggleGroup(groupName)}
-                className="w-full flex items-center space-x-2 px-2 py-1 hover:bg-slate-700/50 rounded transition-colors"
-              >
-                {collapsedGroups.has(groupName) ? (
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
-                )}
-                <span className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-                  {groupName}
-                </span>
-                <span className="text-xs text-slate-500">
-                  ({groupTunnels.length})
-                </span>
-              </button>
+          Object.entries(groupedTunnels).map(([groupId, groupTunnels]) => {
+            const groupName = groupId === 'Ungrouped' 
+              ? 'Ungrouped' 
+              : groups.find(g => g.id === groupId)?.name || 'Unknown Group';
+            
+            return (
+              <div key={groupId} className="space-y-2">
+                {/* Group Header */}
+                <button
+                  onClick={() => toggleGroup(groupId)}
+                  className="w-full flex items-center space-x-2 px-2 py-1 hover:bg-slate-700/50 rounded transition-colors"
+                >
+                  {collapsedGroups.has(groupId) ? (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  )}
+                  <span className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                    {groupName}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    ({groupTunnels.length})
+                  </span>
+                </button>
 
-              {/* Group Tunnels */}
-              {!collapsedGroups.has(groupName) && (
+                {/* Group Tunnels */}
+                {!collapsedGroups.has(groupId) && (
                 <div className="space-y-2 ml-2">
                   {groupTunnels.map((tunnel) => (
                     <div
@@ -156,7 +161,8 @@ export function TunnelManager() {
                 </div>
               )}
             </div>
-          ))
+            );
+          })
         )}
       </div>
 

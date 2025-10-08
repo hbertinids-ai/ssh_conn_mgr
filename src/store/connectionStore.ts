@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SSHConnection, SSHSession, SSHTunnel, SSHAccount } from '../types';
+import { SSHConnection, SSHSession, SSHTunnel, SSHAccount, SSHGroup } from '../types';
 
 interface ConnectionState {
   connections: SSHConnection[];
   tunnels: SSHTunnel[];
   accounts: SSHAccount[];
+  groups: SSHGroup[];
   sessions: SSHSession[];
   activeSessionId: string | null;
   
@@ -24,6 +25,11 @@ interface ConnectionState {
   updateAccount: (id: string, account: Partial<SSHAccount>) => void;
   deleteAccount: (id: string) => void;
   
+  // Group CRUD
+  addGroup: (group: Omit<SSHGroup, 'id' | 'createdAt'>) => void;
+  updateGroup: (id: string, group: Partial<SSHGroup>) => void;
+  deleteGroup: (id: string) => void;
+  
   // Session management
   createSession: (connectionId: string) => void;
   setSessionStatus: (id: string, status: SSHSession['status'], error?: string) => void;
@@ -37,6 +43,7 @@ export const useConnectionStore = create<ConnectionState>()(
       connections: [],
       tunnels: [],
       accounts: [],
+      groups: [],
       sessions: [],
       activeSessionId: null,
       
@@ -121,6 +128,41 @@ export const useConnectionStore = create<ConnectionState>()(
         }));
       },
       
+      addGroup: (group) => {
+        const newGroup: SSHGroup = {
+          ...group,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          groups: [...state.groups, newGroup],
+        }));
+      },
+      
+      updateGroup: (id, updates) => {
+        set((state) => ({
+          groups: state.groups.map((group) =>
+            group.id === id ? { ...group, ...updates } : group
+          ),
+        }));
+      },
+      
+      deleteGroup: (id) => {
+        // Remove group references from all entities
+        set((state) => ({
+          groups: state.groups.filter((group) => group.id !== id),
+          connections: state.connections.map((conn) =>
+            conn.groupId === id ? { ...conn, groupId: undefined } : conn
+          ),
+          tunnels: state.tunnels.map((tunnel) =>
+            tunnel.groupId === id ? { ...tunnel, groupId: undefined } : tunnel
+          ),
+          accounts: state.accounts.map((account) =>
+            account.groupId === id ? { ...account, groupId: undefined } : account
+          ),
+        }));
+      },
+      
       createSession: (connectionId) => {
         const connection = get().connections.find((c) => c.id === connectionId);
         if (!connection) return;
@@ -170,6 +212,8 @@ export const useConnectionStore = create<ConnectionState>()(
       partialize: (state) => ({
         connections: state.connections,
         tunnels: state.tunnels,
+        accounts: state.accounts,
+        groups: state.groups,
       }),
     }
   )

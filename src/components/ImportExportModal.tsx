@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Upload, Download, FileText, File, AlertCircle, CheckCircle } from 'lucide-react';
 import { importExportService } from '../services/importExportService';
-import { SSHConnection, SSHTunnel, SSHAccount } from '../types';
+import { SSHConnection, SSHTunnel, SSHAccount, SSHGroup } from '../types';
 
 interface ImportExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'connections' | 'tunnels' | 'accounts';
-  data: SSHConnection[] | SSHTunnel[] | SSHAccount[];
-  onImport: (items: SSHConnection[] | SSHTunnel[] | SSHAccount[]) => void;
+  type: 'connections' | 'tunnels' | 'accounts' | 'groups';
+  data: SSHConnection[] | SSHTunnel[] | SSHAccount[] | SSHGroup[];
+  onImport: (items: SSHConnection[] | SSHTunnel[] | SSHAccount[] | SSHGroup[]) => void;
 }
 
 export function ImportExportModal({ isOpen, onClose, type, data, onImport }: ImportExportModalProps) {
@@ -22,13 +22,16 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
 
   const isConnections = type === 'connections';
   const isAccounts = type === 'accounts';
-  const title = isConnections ? 'Connections' : isAccounts ? 'Accounts' : 'Tunnels';
+  const isGroups = type === 'groups';
+  const title = isConnections ? 'Connections' : isAccounts ? 'Accounts' : isGroups ? 'Groups' : 'Tunnels';
 
   const handleExportCSV = () => {
     if (isConnections) {
       importExportService.exportConnectionsToCSV(data as SSHConnection[], includePasswords);
     } else if (isAccounts) {
       importExportService.exportAccountsToCSV(data as SSHAccount[], includePasswords);
+    } else if (isGroups) {
+      importExportService.exportGroupsToCSV(data as SSHGroup[]);
     } else {
       importExportService.exportTunnelsToCSV(data as SSHTunnel[], includePasswords);
     }
@@ -39,6 +42,8 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
       importExportService.exportConnectionsToJSON(data as SSHConnection[], includePasswords);
     } else if (isAccounts) {
       importExportService.exportAccountsToJSON(data as SSHAccount[], includePasswords);
+    } else if (isGroups) {
+      importExportService.exportGroupsToJSON(data as SSHGroup[]);
     } else {
       importExportService.exportTunnelsToJSON(data as SSHTunnel[], includePasswords);
     }
@@ -49,7 +54,7 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
     setImportMessage('Processing file...');
 
     try {
-      let importedItems: SSHConnection[] | SSHTunnel[] | SSHAccount[];
+      let importedItems: SSHConnection[] | SSHTunnel[] | SSHAccount[] | SSHGroup[];
 
       if (isConnections) {
         if (format === 'csv') {
@@ -62,6 +67,12 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
           importedItems = await importExportService.importAccountsFromCSV(file, keepPasswords);
         } else {
           importedItems = await importExportService.importAccountsFromJSON(file, keepPasswords);
+        }
+      } else if (isGroups) {
+        if (format === 'csv') {
+          importedItems = await importExportService.importGroupsFromCSV(file);
+        } else {
+          importedItems = await importExportService.importGroupsFromJSON(file);
         }
       } else {
         if (format === 'csv') {
@@ -153,23 +164,25 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
                 Download your {type} in CSV or JSON format for backup or sharing.
               </p>
 
-              {/* Password option */}
-              <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includePasswords}
-                    onChange={(e) => setIncludePasswords(e.target.checked)}
-                    className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <div>
-                    <div className="text-white font-medium">Include passwords and private keys</div>
-                    <div className="text-slate-400 text-sm">
-                      Export credentials (not recommended for shared files)
-                    </div>
+              {/* Password option - hide for groups */}
+              {!isGroups && (
+                <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includePasswords}
+                      onChange={(e) => setIncludePasswords(e.target.checked)}
+                      className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <div>
+                      <div className="text-white font-medium">Include passwords and private keys</div>
+                      <div className="text-slate-400 text-sm">
+                        Export credentials (not recommended for shared files)
+                      </div>
                   </div>
                 </label>
               </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -195,7 +208,7 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
                 </button>
               </div>
 
-              {!includePasswords && (
+              {!includePasswords && !isGroups && (
                 <div className="mt-6 p-4 bg-amber-900/20 border border-amber-700 rounded-lg">
                   <div className="flex items-start space-x-2">
                     <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5" />
@@ -219,23 +232,25 @@ export function ImportExportModal({ isOpen, onClose, type, data, onImport }: Imp
                 Upload a CSV or JSON file to import {type}. Existing items will not be overwritten.
               </p>
 
-              {/* Password option */}
-              <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={keepPasswords}
-                    onChange={(e) => setKeepPasswords(e.target.checked)}
-                    className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <div>
-                    <div className="text-white font-medium">Keep passwords and private keys from file</div>
-                    <div className="text-slate-400 text-sm">
-                      Import credentials if they exist in the file (only if previously exported with passwords)
+              {/* Password option - hide for groups */}
+              {!isGroups && (
+                <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={keepPasswords}
+                      onChange={(e) => setKeepPasswords(e.target.checked)}
+                      className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <div>
+                      <div className="text-white font-medium">Keep passwords and private keys from file</div>
+                      <div className="text-slate-400 text-sm">
+                        Import credentials if they exist in the file (only if previously exported with passwords)
+                      </div>
                     </div>
-                  </div>
-                </label>
-              </div>
+                  </label>
+                </div>
+              )}
 
               {importStatus === 'idle' && (
                 <div className="grid grid-cols-2 gap-4">

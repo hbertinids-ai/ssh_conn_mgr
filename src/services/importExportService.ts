@@ -1,4 +1,4 @@
-import { SSHConnection, SSHTunnel, SSHAccount } from '../types';
+import { SSHConnection, SSHTunnel, SSHAccount, SSHGroup } from '../types';
 
 export interface ImportExportService {
   exportConnectionsToCSV: (connections: SSHConnection[], includePasswords?: boolean) => void;
@@ -7,12 +7,16 @@ export interface ImportExportService {
   exportTunnelsToJSON: (tunnels: SSHTunnel[], includePasswords?: boolean) => void;
   exportAccountsToCSV: (accounts: SSHAccount[], includePasswords?: boolean) => void;
   exportAccountsToJSON: (accounts: SSHAccount[], includePasswords?: boolean) => void;
+  exportGroupsToCSV: (groups: SSHGroup[]) => void;
+  exportGroupsToJSON: (groups: SSHGroup[]) => void;
   importConnectionsFromCSV: (file: File, keepPasswords?: boolean) => Promise<SSHConnection[]>;
   importConnectionsFromJSON: (file: File, keepPasswords?: boolean) => Promise<SSHConnection[]>;
   importTunnelsFromCSV: (file: File, keepPasswords?: boolean) => Promise<SSHTunnel[]>;
   importTunnelsFromJSON: (file: File, keepPasswords?: boolean) => Promise<SSHTunnel[]>;
   importAccountsFromCSV: (file: File, keepPasswords?: boolean) => Promise<SSHAccount[]>;
   importAccountsFromJSON: (file: File, keepPasswords?: boolean) => Promise<SSHAccount[]>;
+  importGroupsFromCSV: (file: File) => Promise<SSHGroup[]>;
+  importGroupsFromJSON: (file: File) => Promise<SSHGroup[]>;
 }
 
 // CSV conversion utilities
@@ -24,7 +28,7 @@ function connectionToCSVRow(connection: SSHConnection): string {
     connection.port.toString(),
     connection.username,
     authMethod,
-    connection.group || '',
+    connection.groupId || '',
     connection.color || '',
     connection.tunnelId || '',
     connection.createdAt
@@ -45,7 +49,7 @@ function tunnelToCSVRow(tunnel: SSHTunnel): string {
     tunnel.host,
     tunnel.port.toString(),
     tunnel.username,
-    tunnel.group || '',
+    tunnel.groupId || '',
     tunnel.createdAt
   ];
   
@@ -64,7 +68,7 @@ function accountToCSVRow(account: SSHAccount): string {
     account.username,
     authMethod,
     account.description || '',
-    account.group || '',
+    account.groupId || '',
     account.createdAt
   ];
   
@@ -213,7 +217,7 @@ export const importExportService: ImportExportService = {
         username: row[3],
         password: keepPasswords && !isPrivateKey ? '' : undefined,
         privateKey: keepPasswords && isPrivateKey ? '' : undefined,
-        group: row[5] || undefined,
+        groupId: row[5] || undefined,
         color: row[6] || '#3b82f6',
         tunnelId: row[7] || undefined,
         createdAt: row[8] || new Date().toISOString()
@@ -242,7 +246,7 @@ export const importExportService: ImportExportService = {
       password: keepPasswords && item.password ? item.password : undefined,
       privateKey: keepPasswords && item.privateKey ? item.privateKey : undefined,
       accountId: item.accountId,
-      group: item.group,
+      groupId: item.groupId,
       color: item.color || '#3b82f6',
       tunnelId: item.tunnelId,
       createdAt: item.createdAt || new Date().toISOString()
@@ -276,7 +280,7 @@ export const importExportService: ImportExportService = {
         port: parseInt(row[2]) || 22,
         username: row[3],
         password: keepPasswords ? '' : undefined,
-        group: row[4] || undefined,
+        groupId: row[4] || undefined,
         createdAt: row[5] || new Date().toISOString()
       };
       
@@ -301,7 +305,7 @@ export const importExportService: ImportExportService = {
       port: item.port || 22,
       username: item.username || 'root',
       password: keepPasswords && item.password ? item.password : undefined,
-      group: item.group,
+      groupId: item.groupId,
       createdAt: item.createdAt || new Date().toISOString()
     }));
   },
@@ -361,7 +365,7 @@ export const importExportService: ImportExportService = {
         password: keepPasswords && !isPrivateKey ? '' : undefined,
         privateKey: keepPasswords && isPrivateKey ? '' : undefined,
         description: row[3] || undefined,
-        group: row[4] || undefined,
+        groupId: row[4] || undefined,
         createdAt: row[5] || new Date().toISOString()
       };
       
@@ -386,7 +390,62 @@ export const importExportService: ImportExportService = {
       password: keepPasswords && item.password ? item.password : undefined,
       privateKey: keepPasswords && item.privateKey ? item.privateKey : undefined,
       description: item.description,
-      group: item.group,
+      groupId: item.groupId,
+      createdAt: item.createdAt || new Date().toISOString()
+    }));
+  },
+
+  exportGroupsToCSV: (groups: SSHGroup[]) => {
+    const csvContent = [
+      'Name,Description,Color,Created At',
+      ...groups.map(group => {
+        return [
+          `"${group.name}"`,
+          `"${group.description || ''}"`,
+          group.color || '',
+          group.createdAt
+        ].join(',');
+      })
+    ].join('\n');
+
+    downloadFile(csvContent, 'groups.csv', 'text/csv');
+  },
+
+  exportGroupsToJSON: (groups: SSHGroup[]) => {
+    const json = JSON.stringify(groups, null, 2);
+    downloadFile(json, 'groups.json', 'application/json');
+  },
+
+  importGroupsFromCSV: async (file: File): Promise<SSHGroup[]> => {
+    const content = await file.text();
+    const rows = content.split('\n').filter(row => row.trim());
+    
+    // Skip header
+    return rows.slice(1).map((row) => {
+      const cols = parseCSVRow(row);
+      return {
+        id: crypto.randomUUID(),
+        name: cols[0] || 'Imported Group',
+        description: cols[1] || undefined,
+        color: cols[2] || undefined,
+        createdAt: cols[3] || new Date().toISOString()
+      };
+    });
+  },
+
+  importGroupsFromJSON: async (file: File): Promise<SSHGroup[]> => {
+    const content = await file.text();
+    const data = JSON.parse(content);
+    
+    if (!Array.isArray(data)) {
+      throw new Error('JSON file must contain an array of groups');
+    }
+    
+    return data.map((item: any) => ({
+      id: crypto.randomUUID(),
+      name: item.name || 'Imported Group',
+      description: item.description,
+      color: item.color,
       createdAt: item.createdAt || new Date().toISOString()
     }));
   }

@@ -6,43 +6,43 @@ import { ImportExportModal } from './ImportExportModal';
 import { SSHAccount } from '../types';
 
 export function AccountManager() {
-  const { accounts, deleteAccount, addAccount } = useConnectionStore();
+  const { accounts, groups, deleteAccount, addAccount } = useConnectionStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [importExportOpen, setImportExportOpen] = useState(false);
 
-  // Group accounts by group field
+  // Group accounts by groupId field
   const groupedAccounts = useMemo(() => {
-    const groups: Record<string, typeof accounts> = {};
+    const groupMap: Record<string, typeof accounts> = {};
     
     accounts.forEach((account) => {
-      const groupName = account.group || 'Ungrouped';
-      if (!groups[groupName]) {
-        groups[groupName] = [];
+      const groupId = account.groupId || 'Ungrouped';
+      if (!groupMap[groupId]) {
+        groupMap[groupId] = [];
       }
-      groups[groupName].push(account);
+      groupMap[groupId].push(account);
     });
     
-    return groups;
+    return groupMap;
   }, [accounts]);
 
-  // Initialize all groups as collapsed
+  // Initialize all groups as collapsed (start with all groupIds in the set)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
-    const groupNames = new Set<string>();
+    const groupIds = new Set<string>();
     accounts.forEach((account) => {
-      const groupName = account.group || 'Ungrouped';
-      groupNames.add(groupName);
+      const groupId = account.groupId || 'Ungrouped';
+      groupIds.add(groupId);
     });
-    return groupNames;
+    return groupIds;
   });
 
-  const toggleGroup = (groupName: string) => {
+  const toggleGroup = (groupId: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev);
-      if (next.has(groupName)) {
-        next.delete(groupName);
+      if (next.has(groupId)) {
+        next.delete(groupId);
       } else {
-        next.add(groupName);
+        next.add(groupId);
       }
       return next;
     });
@@ -96,23 +96,28 @@ export function AccountManager() {
             <p className="text-slate-500 text-sm">Create your first account to manage credentials</p>
           </div>
         ) : (
-          Object.entries(groupedAccounts).map(([groupName, groupAccounts]) => (
-            <div key={groupName} className="space-y-2">
-              <button
-                onClick={() => toggleGroup(groupName)}
-                className="flex items-center space-x-2 w-full text-left py-2 px-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-              >
-                {collapsedGroups.has(groupName) ? (
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-slate-400" />
-                )}
-                <User className="w-4 h-4 text-slate-400" />
-                <span className="font-medium text-slate-300">{groupName}</span>
-                <span className="text-xs text-slate-500">({groupAccounts.length})</span>
-              </button>
+          Object.entries(groupedAccounts).map(([groupId, groupAccounts]) => {
+            const groupName = groupId === 'Ungrouped' 
+              ? 'Ungrouped' 
+              : groups.find(g => g.id === groupId)?.name || 'Unknown Group';
+            
+            return (
+              <div key={groupId} className="space-y-2">
+                <button
+                  onClick={() => toggleGroup(groupId)}
+                  className="flex items-center space-x-2 w-full text-left py-2 px-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+                >
+                  {collapsedGroups.has(groupId) ? (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  )}
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="font-medium text-slate-300">{groupName}</span>
+                  <span className="text-xs text-slate-500">({groupAccounts.length})</span>
+                </button>
 
-              {!collapsedGroups.has(groupName) && (
+                {!collapsedGroups.has(groupId) && (
                 <div className="pl-6 space-y-2">
                   {groupAccounts.map((account) => (
                     <div
@@ -171,7 +176,8 @@ export function AccountManager() {
                 </div>
               )}
             </div>
-          ))
+            );
+          })
         )}
       </div>
 

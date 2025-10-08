@@ -8,28 +8,19 @@ interface AccountFormProps {
 }
 
 export function AccountForm({ accountId, onClose }: AccountFormProps) {
-  const { accounts, connections, tunnels, addAccount, updateAccount } = useConnectionStore();
+  const { accounts, groups, addAccount, updateAccount } = useConnectionStore();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
     password: '',
     privateKey: '',
     description: '',
-    group: '',
+    groupId: '',
     authMethod: 'password' as 'password' | 'privateKey'
   });
   const [showPassword, setShowPassword] = useState(false);
 
   const isEditing = !!accountId;
-
-  // Get unique groups from all entities (connections, tunnels, accounts)
-  const existingGroups = Array.from(
-    new Set([
-      ...connections.map(c => c.group).filter(Boolean),
-      ...tunnels.map(t => t.group).filter(Boolean),
-      ...accounts.map(a => a.group).filter(Boolean),
-    ])
-  ) as string[];
 
   useEffect(() => {
     if (isEditing && accountId) {
@@ -41,7 +32,7 @@ export function AccountForm({ accountId, onClose }: AccountFormProps) {
           password: account.password || '',
           privateKey: account.privateKey || '',
           description: account.description || '',
-          group: account.group || '',
+          groupId: account.groupId || '',
           authMethod: account.privateKey ? 'privateKey' : 'password'
         });
       }
@@ -55,7 +46,7 @@ export function AccountForm({ accountId, onClose }: AccountFormProps) {
       name: formData.name,
       username: formData.username,
       description: formData.description || undefined,
-      group: formData.group || undefined,
+      groupId: formData.groupId || undefined,
       password: formData.authMethod === 'password' ? formData.password : undefined,
       privateKey: formData.authMethod === 'privateKey' ? formData.privateKey : undefined,
     };
@@ -202,20 +193,20 @@ export function AccountForm({ accountId, onClose }: AccountFormProps) {
             <label className="block text-sm font-medium text-slate-300 mb-2">
               Group
             </label>
-            <input
-              type="text"
-              list="account-groups"
-              value={formData.group}
-              onChange={(e) => handleInputChange('group', e.target.value)}
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="e.g., Production, Development"
-              title="Select an existing group or type a new group name"
-            />
-            <datalist id="account-groups">
-              {existingGroups.map((group) => (
-                <option key={group} value={group} />
-              ))}
-            </datalist>
+            <select
+              value={formData.groupId || ''}
+              onChange={(e) => handleInputChange('groupId', e.target.value)}
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">No group</option>
+              {groups
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(group => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
           <div className="flex space-x-3 pt-4">
