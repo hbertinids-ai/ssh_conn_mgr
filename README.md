@@ -1,6 +1,6 @@
 # SSH Connection Manager
 
-A modern, beautiful SSH connection manager built with Electron, React, and TypeScript. Manage multiple SSH sessions with tabs, support for SSH tunnels, and a clean user interface.
+**Version 1.1.0** - A modern, beautiful SSH connection manager built with Electron, React, and TypeScript. Manage multiple SSH sessions with tabs, support for SSH tunnels, unified group management, and a clean user interface.
 
 ## Features
 
@@ -96,9 +96,18 @@ Want to quickly add 22 pre-configured CAT1 connections? See **[CAT1_DATA_READY.m
    - Optional: Group (e.g., "Admin Accounts", "User Accounts")
 4. Click "Create Account"
 
-When creating connections, you can:
-- Select an existing account from the dropdown to auto-populate credentials
+**Using Accounts in Connections and Tunnels:**
+- When creating or editing connections/tunnels, select an existing account from the dropdown
+- Account dropdown shows: `[Group] / Account Name (username)` for easy identification
+- Selecting an account auto-populates username, password, and private key fields
+- Credential fields are disabled when an account is selected (to ensure consistency)
 - Or choose "Manual entry" to enter credentials directly
+
+**Smart Group Management:**
+- All form group dropdowns show existing groups from connections, tunnels, AND accounts
+- This ensures consistent organization across all entity types
+- Simply start typing to select an existing group or create a new one
+- Imported groups are automatically available in dropdowns
 
 ### Connecting to a Server
 

@@ -6,6 +6,7 @@ export interface SSHTunnel {
   username: string;
   password?: string;
   privateKey?: string;
+  accountId?: string; // Reference to SSHAccount
   group?: string;
   createdAt: string;
 }

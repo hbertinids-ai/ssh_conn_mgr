@@ -1,6 +1,65 @@
 # UI/UX Improvements - Change Log
 
-## Changes Implemented
+## Latest Changes - UI Cleanup & Form Enhancements (2025-10-07)
+
+### UI Cleanup
+- **Removed Import/Export button from top bar** - Simplified the header by removing the Import/Export button
+- Import/Export functionality remains fully accessible via the buttons in each entity's left sidebar
+- Cleaner, less cluttered interface with focus on core navigation
+
+---
+
+## Form Enhancements (2025-10-07)
+
+### Enhanced Form Features
+
+#### Account Dropdown Improvements
+1. **Connection Form**: Account dropdown now displays group name alongside account name
+   - Format: `[Group] / Account Name (username)`
+   - Example: `Production / Web Server Admin (admin)`
+   
+2. **Tunnel Form**: Added account dropdown with same group/name display format
+   - Allows credential reuse across tunnels
+   - Auto-populates username, password, and private key fields
+   - Disables credential fields when account is selected
+
+#### Group Dropdown Enhancements (All Forms)
+3. **Connection Form**: Group dropdown now shows all existing groups from:
+   - All connections
+   - All tunnels
+   - All accounts
+   - Still allows typing new group names (datalist functionality)
+
+4. **Tunnel Form**: Added comprehensive group dropdown
+   - Shows groups from connections, tunnels, and accounts
+   - Allows typing new group names
+   - Same functionality as connection form
+
+5. **Account Form**: Added comprehensive group dropdown
+   - Shows groups from connections, tunnels, and accounts
+   - Allows typing new group names
+   - Consistent with other forms
+
+6. **Import Integration**: Groups from imported connections, tunnels, and accounts are automatically included in respective dropdowns
+
+#### Technical Changes
+- Added `accountId?: string` field to `SSHTunnel` interface
+- Updated `ConnectionForm.tsx` to display grouped account names
+- Updated `TunnelForm.tsx` to include account dropdown and unified group dropdown
+- Updated `AccountForm.tsx` to include unified group dropdown
+- Enhanced group collection to aggregate from all entity types (connections, tunnels, accounts)
+- All forms now use datalist for group suggestions while allowing custom input
+
+#### Benefits
+- **Reduced Errors**: Reusing accounts reduces typos in credentials
+- **Faster Setup**: Group suggestions speed up entity organization
+- **Better Management**: Cross-entity group visibility improves organization
+- **Consistent UX**: Same patterns across connections and tunnels
+- **Import Friendly**: Imported groups immediately available in dropdowns
+
+---
+
+## Previous Changes Implemented
 
 ### 1. ✅ Removed Settings Button
 - Removed the "Settings" button from the header

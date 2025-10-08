@@ -23,8 +23,14 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
     group: '',
   });
 
-  // Get unique groups from existing connections
-  const existingGroups = Array.from(new Set(connections.map(c => c.group).filter(Boolean))) as string[];
+  // Get unique groups from all entities (connections, tunnels, accounts)
+  const existingGroups = Array.from(
+    new Set([
+      ...connections.map(c => c.group).filter(Boolean),
+      ...tunnels.map(t => t.group).filter(Boolean),
+      ...accounts.map(a => a.group).filter(Boolean),
+    ])
+  ) as string[];
 
   useEffect(() => {
     if (connection) {
@@ -141,7 +147,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               <option value="">Manual entry</option>
               {accounts.map(account => (
                 <option key={account.id} value={account.id}>
-                  {account.name} ({account.username})
+                  {account.group ? `${account.group} / ` : ''}{account.name} ({account.username})
                 </option>
               ))}
             </select>
@@ -202,6 +208,7 @@ export function ConnectionForm({ connectionId, onClose }: ConnectionFormProps) {
               value={formData.group}
               onChange={(e) => setFormData({ ...formData, group: e.target.value })}
               placeholder="e.g., Production, Development"
+              title="Select an existing group or type a new group name"
             />
             <datalist id="connection-groups">
               {existingGroups.map((group) => (

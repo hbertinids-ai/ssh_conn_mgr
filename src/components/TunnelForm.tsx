@@ -8,7 +8,7 @@ interface TunnelFormProps {
 }
 
 export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
-  const { tunnels, addTunnel, updateTunnel } = useConnectionStore();
+  const { tunnels, connections, accounts, addTunnel, updateTunnel } = useConnectionStore();
   const tunnel = tunnelId ? tunnels.find((t) => t.id === tunnelId) : null;
 
   const [formData, setFormData] = useState({
@@ -18,11 +18,18 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
     username: '',
     password: '',
     privateKey: '',
+    accountId: '',
     group: '',
   });
 
-  // Get unique groups from existing tunnels
-  const existingGroups = Array.from(new Set(tunnels.map(t => t.group).filter(Boolean))) as string[];
+  // Get unique groups from all entities (connections, tunnels, accounts)
+  const existingGroups = Array.from(
+    new Set([
+      ...connections.map(c => c.group).filter(Boolean),
+      ...tunnels.map(t => t.group).filter(Boolean),
+      ...accounts.map(a => a.group).filter(Boolean),
+    ])
+  ) as string[];
 
   useEffect(() => {
     if (tunnel) {
@@ -33,6 +40,7 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
         username: tunnel.username,
         password: tunnel.password || '',
         privateKey: tunnel.privateKey || '',
+        accountId: tunnel.accountId || '',
         group: tunnel.group || '',
       });
     }
@@ -45,6 +53,7 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
       ...formData,
       password: formData.password || undefined,
       privateKey: formData.privateKey || undefined,
+      accountId: formData.accountId || undefined,
       group: formData.group || undefined,
     };
 
@@ -112,6 +121,33 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Account (optional)</label>
+            <select
+              className="input-field"
+              value={formData.accountId}
+              onChange={(e) => {
+                const accountId = e.target.value;
+                const selectedAccount = accounts.find(a => a.id === accountId);
+                setFormData({ 
+                  ...formData, 
+                  accountId,
+                  username: selectedAccount ? selectedAccount.username : formData.username,
+                  password: selectedAccount ? (selectedAccount.password || '') : formData.password,
+                  privateKey: selectedAccount ? (selectedAccount.privateKey || '') : formData.privateKey,
+                });
+              }}
+              title="Select an account to use its credentials"
+            >
+              <option value="">Manual entry</option>
+              {accounts.map(account => (
+                <option key={account.id} value={account.id}>
+                  {account.group ? `${account.group} / ` : ''}{account.name} ({account.username})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">Username</label>
             <input
               type="text"
@@ -120,6 +156,8 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               placeholder="user"
+              disabled={!!formData.accountId}
+              title={formData.accountId ? "Username is populated from selected account" : "Enter username"}
             />
           </div>
 
@@ -134,6 +172,7 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
               value={formData.group}
               onChange={(e) => setFormData({ ...formData, group: e.target.value })}
               placeholder="e.g., Production, Development"
+              title="Select an existing group or type a new group name"
             />
             <datalist id="tunnel-groups">
               {existingGroups.map((group) => (
@@ -144,7 +183,7 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
-              Password
+              Password (optional)
             </label>
             <input
               type="password"
@@ -152,6 +191,8 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               placeholder="••••••••"
+              disabled={!!formData.accountId}
+              title={formData.accountId ? "Password is populated from selected account" : "Enter password"}
             />
           </div>
 
@@ -165,6 +206,8 @@ export function TunnelForm({ tunnelId, onClose }: TunnelFormProps) {
               value={formData.privateKey}
               onChange={(e) => setFormData({ ...formData, privateKey: e.target.value })}
               placeholder="-----BEGIN RSA PRIVATE KEY-----"
+              disabled={!!formData.accountId}
+              title={formData.accountId ? "Private key is populated from selected account" : "Enter private key"}
             />
           </div>
 

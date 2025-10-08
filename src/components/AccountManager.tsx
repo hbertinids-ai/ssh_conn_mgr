@@ -152,17 +152,17 @@ export function AccountManager() {
                         <div className="flex items-center space-x-2 ml-4">
                           <button
                             onClick={() => handleEdit(account.id)}
-                            className="w-8 h-8 bg-blue-600 hover:bg-blue-700 rounded-lg flex items-center justify-center text-white transition-colors"
-                            title="Edit account"
+                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                            title="Edit"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-4 h-4 text-blue-400" />
                           </button>
                           <button
                             onClick={() => handleDelete(account.id)}
-                            className="w-8 h-8 bg-red-600 hover:bg-red-700 rounded-lg flex items-center justify-center text-white transition-colors"
-                            title="Delete account"
+                            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                            title="Delete"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4 text-red-400" />
                           </button>
                         </div>
                       </div>

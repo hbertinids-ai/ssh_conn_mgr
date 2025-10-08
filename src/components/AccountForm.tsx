@@ -8,7 +8,7 @@ interface AccountFormProps {
 }
 
 export function AccountForm({ accountId, onClose }: AccountFormProps) {
-  const { accounts, addAccount, updateAccount } = useConnectionStore();
+  const { accounts, connections, tunnels, addAccount, updateAccount } = useConnectionStore();
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -21,6 +21,15 @@ export function AccountForm({ accountId, onClose }: AccountFormProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const isEditing = !!accountId;
+
+  // Get unique groups from all entities (connections, tunnels, accounts)
+  const existingGroups = Array.from(
+    new Set([
+      ...connections.map(c => c.group).filter(Boolean),
+      ...tunnels.map(t => t.group).filter(Boolean),
+      ...accounts.map(a => a.group).filter(Boolean),
+    ])
+  ) as string[];
 
   useEffect(() => {
     if (isEditing && accountId) {
@@ -195,11 +204,18 @@ export function AccountForm({ accountId, onClose }: AccountFormProps) {
             </label>
             <input
               type="text"
+              list="account-groups"
               value={formData.group}
               onChange={(e) => handleInputChange('group', e.target.value)}
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="e.g., Production, Development"
+              title="Select an existing group or type a new group name"
             />
+            <datalist id="account-groups">
+              {existingGroups.map((group) => (
+                <option key={group} value={group} />
+              ))}
+            </datalist>
           </div>
 
           <div className="flex space-x-3 pt-4">
