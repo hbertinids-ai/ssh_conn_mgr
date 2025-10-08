@@ -49,8 +49,11 @@ Thumbs.db
 # Sensitive data and scripts
 scripts/populate-*.ts
 scripts/populate-*.js
+!scripts/populate-example.ts
+!scripts/populate-example.js
 scripts/*data*.ts
 scripts/*data*.js
+!scripts/*example*
 **/connections.csv
 **/tunnels.csv
 **/accounts.csv
